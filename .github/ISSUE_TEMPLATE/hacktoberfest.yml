@@ -1,0 +1,103 @@
+name: 🎯 Hacktoberfest Contribution
+description: Special issue for Hacktoberfest 2025 participants
+title: "[Hacktoberfest]: "
+labels: ["hacktoberfest", "good first issue"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Welcome to Hacktoberfest 2025! 🎃
+
+        This is a special issue template for Hacktoberfest participants. We're excited to have you contribute!
+
+  - type: checkboxes
+    id: hacktoberfest
+    attributes:
+      label: Hacktoberfest Participation
+      options:
+        - label: I'm participating in Hacktoberfest 2025
+          required: true
+        - label: I've read the contributing guidelines
+          required: true
+        - label: This will be a meaningful contribution
+          required: true
+
+  - type: dropdown
+    id: contribution-type
+    attributes:
+      label: Type of contribution
+      description: What kind of contribution are you planning?
+      options:
+        - Bug fix
+        - New feature
+        - Documentation improvement
+        - UI/UX enhancement
+        - Performance optimization
+        - Testing
+        - Accessibility improvement
+        - Code refactoring
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe your contribution
+      description: What would you like to work on?
+      placeholder: I'd like to improve... / I noticed that... / I want to add...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: experience
+    attributes:
+      label: Your experience level
+      description: This helps us provide appropriate support
+      options:
+        - Beginner (first time contributing)
+        - Intermediate (some open source experience)
+        - Advanced (experienced contributor)
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: skills
+    attributes:
+      label: Relevant skills
+      description: Select technologies you're comfortable with
+      options:
+        - label: JavaScript/TypeScript
+        - label: HTML/CSS
+        - label: Astro framework
+        - label: React/Vue/other frameworks
+        - label: Node.js
+        - label: Git/GitHub
+        - label: Testing
+        - label: Documentation writing
+        - label: UI/UX design
+
+  - type: textarea
+    id: timeline
+    attributes:
+      label: Estimated timeline
+      description: When do you plan to complete this contribution?
+      placeholder: I can work on this over the next... / I estimate it will take...
+
+  - type: textarea
+    id: help
+    attributes:
+      label: Do you need any help?
+      description: Let us know if you need guidance or have questions
+      placeholder: I'm not sure about... / I would appreciate help with...
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+
+        **Thank you for contributing to Hacktoberfest 2025!** 🚀
+
+        After submitting this issue, we'll review it and provide feedback. Feel free to start working on your contribution and open a draft PR when ready.
+
+        Happy coding! 🎉
