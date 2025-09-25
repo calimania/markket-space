@@ -13,6 +13,10 @@ const config: StrapiConfig = {
   sync_interval: 6000,
 };
 
+// @TODO: Find a better type to avoid excessively deep and possibly infinite errors
+type Loader = any;
+
+
 /**
  * Creates a Strapi content loader for Astro
  * @param contentType The Strapi content type to load
@@ -43,9 +47,10 @@ function strapiLoader(query: StrapiQueryOptions) {
 const pages = defineCollection({
   loader: strapiLoader({
     contentType: "page",
+    sort: 'slug:DESC',
     filter: `filters[store][slug][$eq]=${config.store_slug}`,
     populate: 'SEO.socialImage,albums,albums.tracks,albums.cover'
-  }),
+  }) as Loader,
 });
 
 
@@ -54,7 +59,7 @@ const store = defineCollection({
     contentType: "store",
     filter: `filters[slug][$eq]=${config.store_slug}`,
     populate: 'SEO.socialImage,Logo,URLS,Favicon,Cover'
-  }),
+  }) as Loader,
 });
 
 const stores = defineCollection({
@@ -62,15 +67,16 @@ const stores = defineCollection({
     contentType: "store",
     filter: `filters[active]=true`,
     populate: 'SEO.socialImage,Logo,URLS,Favicon'
-  }),
+  }) as Loader,
 });
 
 const products = defineCollection({
   loader: strapiLoader({
     contentType: "product",
     filter: `filters[stores][slug][$eq]=${config.store_slug}`,
+    sort: 'slug:DESC',
     populate: 'SEO,SEO.socialImage,Thumbnail,Slides,PRICES'
-  }),
+  }) as Loader,
 });
 
 const posts = defineCollection({
@@ -78,10 +84,11 @@ const posts = defineCollection({
     contentType: "article",
     filter: `filters[store][slug][$eq]=${config.store_slug}`,
     populate: 'SEO.socialImage,Tags,store,cover',
+    sort: 'createdAt:DESC',
     paginate: {
       limit: 100,
     }
-  }),
+  }) as Loader,
 });
 
 const events = defineCollection({
@@ -89,7 +96,7 @@ const events = defineCollection({
     contentType: "event",
     filter: `filters[stores][slug][$eq]=${config.store_slug}`,
     populate: 'SEO,SEO.socialImage,Tag,Thumbnail,Slides,stores'
-  }),
+  }) as Loader,
 });
 
 export const collections = { posts, pages, stores, products, events, store };
