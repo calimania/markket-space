@@ -8,16 +8,37 @@
       }
 
       :root {
-        --primary: #ec4899;
-        --primary-dark: #db2777;
-        --secondary: #6366f1;
-        --text: #111827;
-        --text-muted: #6b7280;
+        /* Brand Colors - Vibrant and artistic */
+          --primary: #E4007C;
+          --primary-dark: #e400d7;
+          --primary-light: #ffb3d1;
+          --secondary: #4f46e5;
+          --secondary-dark: #3730a3;
+          --accent: #06d6a0;
+          --accent-dark: #048a61;
+        
+          /* Text Colors - High contrast for readability */
+          --text: #1a1a1a;
+          --text-light: #ffffff;
+          --text-muted: #64748b;
+          --text-on-primary: #ffffff;
+        
+          /* Background Colors */
         --bg: #ffffff;
-        --bg-alt: #f9fafb;
-        --border: #e5e7eb;
+        --bg-alt: #f8fafc;
+          --bg-dark: #0f172a;
+          --bg-gradient: linear-gradient(135deg, #ff6b9d 0%, #4f46e5 100%);
+        
+          /* UI Elements */
+          --border: #e2e8f0;
+          --border-light: #f1f5f9;
         --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+          --shadow-xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+        
+          /* Radius */
+          --radius: 0.75rem;
+          --radius-lg: 1rem;
       }
 
       body {

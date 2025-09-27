@@ -1,253 +1,60 @@
 ---
-import { type ContentBlock } from '../types.d';
+import { type ContentBlock } from "../types.d";
 
 export interface Props {
   content?: ContentBlock[];
   className?: string;
 }
 
-const { content, className = '' } = Astro.props;
+const { content, className = "" } = Astro.props;
 ---
 
-{content && content.length > 0 && (
-  <div class={`blocks-content ${className}`}>
-    {content.map((block) => (
-      <Fragment>
-        {/* Paragraph blocks */}
-        {block.type === 'paragraph' && (
-          <p class="mb-4 leading-relaxed">
-            {block.children.map((child) => (
-              <Fragment>
-                {child.code && (
-                  <code class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">
-                    {child.text}
-                  </code>
-                )}
-                {child.type === 'link' && !child.code && (
-                  <a
-                    href={child.url}
-                    target={child.url?.startsWith('/') ? '_self' : '_blank'}
-                    rel="noopener noreferrer"
-                    class="text-blue-600 hover:text-pink-600 transition-colors underline"
-                  >
-                    {child.children?.[0]?.text || child.text}
-                  </a>
-                )}
-                {!child.code && child.type !== 'link' && (
-                  <span>{child.text}</span>
-                )}
-              </Fragment>
-            ))}
-          </p>
-        )}
-
-        {/* Heading blocks */}
-        {block.type === 'heading' && block.level === 1 && (
-          <h1 class="text-4xl font-bold my-6 text-gray-900">
-            {block.children.map((child) => (
-              <Fragment>
-                {child.code ? (
-                  <code class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">
-                    {child.text}
-                  </code>
-                ) : child.type === 'link' ? (
-                  <a
-                    href={child.url}
-                    target={child.url?.startsWith('/') ? '_self' : '_blank'}
-                    rel="noopener noreferrer"
-                    class="text-blue-600 hover:text-pink-600 transition-colors underline"
-                  >
-                    {child.children?.[0]?.text || child.text}
-                  </a>
-                ) : (
-                  <span>{child.text}</span>
-                )}
-              </Fragment>
-            ))}
-          </h1>
-        )}
-
-        {block.type === 'heading' && block.level === 2 && (
-          <h2 class="text-3xl font-bold my-5 text-gray-900">
-            {block.children.map((child) => (
-              <Fragment>
-                {child.code ? (
-                  <code class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">
-                    {child.text}
-                  </code>
-                ) : child.type === 'link' ? (
-                  <a
-                    href={child.url}
-                    target={child.url?.startsWith('/') ? '_self' : '_blank'}
-                    rel="noopener noreferrer"
-                    class="text-blue-600 hover:text-pink-600 transition-colors underline"
-                  >
-                    {child.children?.[0]?.text || child.text}
-                  </a>
-                ) : (
-                  <span>{child.text}</span>
-                )}
-              </Fragment>
-            ))}
-          </h2>
-        )}
-
-        {block.type === 'heading' && block.level === 3 && (
-          <h3 class="text-2xl font-bold my-4 text-gray-900">
-            {block.children.map((child) => (
-              <Fragment>
-                {child.code ? (
-                  <code class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">
-                    {child.text}
-                  </code>
-                ) : child.type === 'link' ? (
-                  <a
-                    href={child.url}
-                    target={child.url?.startsWith('/') ? '_self' : '_blank'}
-                    rel="noopener noreferrer"
-                    class="text-blue-600 hover:text-pink-600 transition-colors underline"
-                  >
-                    {child.children?.[0]?.text || child.text}
-                  </a>
-                ) : (
-                  <span>{child.text}</span>
-                )}
-              </Fragment>
-            ))}
-          </h3>
-        )}
-
-        {block.type === 'heading' && (block.level === 4 || !block.level) && (
-          <h4 class="text-xl font-bold my-3 text-gray-900">
-            {block.children.map((child) => (
-              <Fragment>
-                {child.code ? (
-                  <code class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">
-                    {child.text}
-                  </code>
-                ) : child.type === 'link' ? (
-                  <a
-                    href={child.url}
-                    target={child.url?.startsWith('/') ? '_self' : '_blank'}
-                    rel="noopener noreferrer"
-                    class="text-blue-600 hover:text-pink-600 transition-colors underline"
-                  >
-                    {child.children?.[0]?.text || child.text}
-                  </a>
-                ) : (
-                  <span>{child.text}</span>
-                )}
-              </Fragment>
-            ))}
-          </h4>
-        )}
-
-        {block.type === 'heading' && block.level === 5 && (
-          <h5 class="text-lg font-bold my-2 text-gray-900">
-            {block.children.map((child) => (
-              <Fragment>
-                {child.code ? (
-                  <code class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">
-                    {child.text}
-                  </code>
-                ) : child.type === 'link' ? (
-                  <a
-                    href={child.url}
-                    target={child.url?.startsWith('/') ? '_self' : '_blank'}
-                    rel="noopener noreferrer"
-                    class="text-blue-600 hover:text-pink-600 transition-colors underline"
-                  >
-                    {child.children?.[0]?.text || child.text}
-                  </a>
-                ) : (
-                  <span>{child.text}</span>
-                )}
-              </Fragment>
-            ))}
-          </h5>
-        )}
-
-        {block.type === 'heading' && block.level === 6 && (
-          <h6 class="text-base font-bold my-2 text-gray-900">
-            {block.children.map((child) => (
-              <Fragment>
-                {child.code ? (
-                  <code class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">
-                    {child.text}
-                  </code>
-                ) : child.type === 'link' ? (
-                  <a
-                    href={child.url}
-                    target={child.url?.startsWith('/') ? '_self' : '_blank'}
-                    rel="noopener noreferrer"
-                    class="text-blue-600 hover:text-pink-600 transition-colors underline"
-                  >
-                    {child.children?.[0]?.text || child.text}
-                  </a>
-                ) : (
-                  <span>{child.text}</span>
-                )}
-              </Fragment>
-            ))}
-          </h6>
-        )}
-
-        {/* Code blocks */}
-        {block.type === 'code' && (
-          <div class="my-6">
-            <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto">
-              <code class="font-mono text-sm leading-relaxed">
-                {block.children
-                  .map(child => child.code ? child.text : '')
-                  .filter(Boolean)
-                  .join('\n')}
-              </code>
-            </pre>
-          </div>
-        )}
-
-        {/* List blocks */}
-        {block.type === 'list' && (
-          <ul class="list-disc pl-6 my-4 space-y-2">
-            {block.children
-              .filter(child => child.type === 'list-item')
-              .map((child) => (
-                <li class="leading-relaxed">
-                  {child.children?.map((grandChild) => (
-                    <Fragment>
-                      {grandChild.type === 'link' ? (
-                        <a
-                          href={grandChild.url}
-                          target={grandChild.url?.startsWith('/') ? '_self' : '_blank'}
-                          rel="noopener noreferrer"
-                          class="text-blue-600 hover:text-pink-600 transition-colors underline"
-                        >
-                          {grandChild.text}
-                        </a>
-                      ) : (
-                        <span>{grandChild.text}</span>
-                      )}
-                    </Fragment>
-                  ))}
-                </li>
+{
+  content && content.length > 0 && (
+    <div class={`blocks-content ${className}`}>
+      {content.map((block) => (
+        <Fragment>
+          {/* Paragraph blocks */}
+          {block.type === "paragraph" && (
+            <p class="mb-4 leading-relaxed">
+              {block.children.map((child) => (
+                <Fragment>
+                  {child.code && (
+                    <code class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">
+                      {child.text}
+                    </code>
+                  )}
+                  {child.type === "link" && !child.code && (
+                    <a
+                      href={child.url}
+                      target={child.url?.startsWith("/") ? "_self" : "_blank"}
+                      rel="noopener noreferrer"
+                      class="text-blue-600 hover:text-pink-600 transition-colors underline"
+                    >
+                      {child.children?.[0]?.text || child.text}
+                    </a>
+                  )}
+                  {!child.code && child.type !== "link" && (
+                    <span>{child.text}</span>
+                  )}
+                </Fragment>
               ))}
-          </ul>
-        )}
+            </p>
+          )}
 
-        {/* Quote blocks */}
-        {block.type === 'quote' && (
-          <blockquote class="border-l-4 border-blue-500 pl-6 my-6 italic text-gray-700 bg-gray-50 py-4 rounded-r-lg">
-            <div class="leading-relaxed">
+          {/* Heading blocks */}
+          {block.type === "heading" && block.level === 1 && (
+            <h1 class="text-4xl font-bold my-6" style="color: var(--text);">
               {block.children.map((child) => (
                 <Fragment>
                   {child.code ? (
-                    <code class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-sm font-mono not-italic">
+                    <code class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">
                       {child.text}
                     </code>
-                  ) : child.type === 'link' ? (
+                  ) : child.type === "link" ? (
                     <a
                       href={child.url}
-                      target={child.url?.startsWith('/') ? '_self' : '_blank'}
+                      target={child.url?.startsWith("/") ? "_self" : "_blank"}
                       rel="noopener noreferrer"
                       class="text-blue-600 hover:text-pink-600 transition-colors underline"
                     >
@@ -258,34 +65,233 @@ const { content, className = '' } = Astro.props;
                   )}
                 </Fragment>
               ))}
-            </div>
-          </blockquote>
-        )}
+            </h1>
+          )}
 
-        {/* Image blocks */}
-        {block.type === 'image' && block.image?.url && (
-          <figure class="my-8">
-            <div class="rounded-lg overflow-hidden shadow-lg">
-              <img
-                src={block.image.url}
-                alt={block.image.alternativeText || ''}
-                class="w-full h-auto object-cover"
-                width={block.image.width}
-                height={block.image.height}
-                loading="lazy"
-              />
+          {block.type === "heading" && block.level === 2 && (
+            <h2 class="text-3xl font-bold my-5" style="color: var(--text);">
+              {block.children.map((child) => (
+                <Fragment>
+                  {child.code ? (
+                    <code class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">
+                      {child.text}
+                    </code>
+                  ) : child.type === "link" ? (
+                    <a
+                      href={child.url}
+                      target={child.url?.startsWith("/") ? "_self" : "_blank"}
+                      rel="noopener noreferrer"
+                      class="text-blue-600 hover:text-pink-600 transition-colors underline"
+                    >
+                      {child.children?.[0]?.text || child.text}
+                    </a>
+                  ) : (
+                    <span>{child.text}</span>
+                  )}
+                </Fragment>
+              ))}
+            </h2>
+          )}
+
+          {block.type === "heading" && block.level === 3 && (
+            <h3 class="text-2xl font-bold my-4" style="color: var(--text);">
+              {block.children.map((child) => (
+                <Fragment>
+                  {child.code ? (
+                    <code class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">
+                      {child.text}
+                    </code>
+                  ) : child.type === "link" ? (
+                    <a
+                      href={child.url}
+                      target={child.url?.startsWith("/") ? "_self" : "_blank"}
+                      rel="noopener noreferrer"
+                      class="text-blue-600 hover:text-pink-600 transition-colors underline"
+                    >
+                      {child.children?.[0]?.text || child.text}
+                    </a>
+                  ) : (
+                    <span>{child.text}</span>
+                  )}
+                </Fragment>
+              ))}
+            </h3>
+          )}
+
+          {block.type === "heading" && (block.level === 4 || !block.level) && (
+            <h4 class="text-xl font-bold my-3 ">
+              {block.children.map((child) => (
+                <Fragment>
+                  {child.code ? (
+                    <code class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">
+                      {child.text}
+                    </code>
+                  ) : child.type === "link" ? (
+                    <a
+                      href={child.url}
+                      target={child.url?.startsWith("/") ? "_self" : "_blank"}
+                      rel="noopener noreferrer"
+                      class="text-blue-600 hover:text-pink-600 transition-colors underline"
+                    >
+                      {child.children?.[0]?.text || child.text}
+                    </a>
+                  ) : (
+                    <span>{child.text}</span>
+                  )}
+                </Fragment>
+              ))}
+            </h4>
+          )}
+
+          {block.type === "heading" && block.level === 5 && (
+            <h5 class="text-lg font-bold my-2" style="color: var(--text);">
+              {block.children.map((child) => (
+                <Fragment>
+                  {child.code ? (
+                    <code class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">
+                      {child.text}
+                    </code>
+                  ) : child.type === "link" ? (
+                    <a
+                      href={child.url}
+                      target={child.url?.startsWith("/") ? "_self" : "_blank"}
+                      rel="noopener noreferrer"
+                      class="text-blue-600 hover:text-pink-600 transition-colors underline"
+                    >
+                      {child.children?.[0]?.text || child.text}
+                    </a>
+                  ) : (
+                    <span>{child.text}</span>
+                  )}
+                </Fragment>
+              ))}
+            </h5>
+          )}
+
+          {block.type === "heading" && block.level === 6 && (
+            <h6 class="text-base font-bold my-2" style="color: var(--text);">
+              {block.children.map((child) => (
+                <Fragment>
+                  {child.code ? (
+                    <code class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">
+                      {child.text}
+                    </code>
+                  ) : child.type === "link" ? (
+                    <a
+                      href={child.url}
+                      target={child.url?.startsWith("/") ? "_self" : "_blank"}
+                      rel="noopener noreferrer"
+                      class="text-blue-600 hover:text-pink-600 transition-colors underline"
+                    >
+                      {child.children?.[0]?.text || child.text}
+                    </a>
+                  ) : (
+                    <span>{child.text}</span>
+                  )}
+                </Fragment>
+              ))}
+            </h6>
+          )}
+
+          {/* Code blocks */}
+          {block.type === "code" && (
+            <div class="my-6">
+              <pre class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto">
+                <code class="font-mono text-sm leading-relaxed">
+                  {block.children
+                    .map((child) => (child.code ? child.text : ""))
+                    .filter(Boolean)
+                    .join("\n")}
+                </code>
+              </pre>
             </div>
-            {(block.image.caption || block.image.alternativeText) && (
-              <figcaption class="text-center text-sm text-gray-500 mt-3 italic">
-                {block.image.caption || block.image.alternativeText}
-              </figcaption>
-            )}
-          </figure>
-        )}
-      </Fragment>
-    ))}
-  </div>
-)}
+          )}
+
+          {/* List blocks */}
+          {block.type === "list" && (
+            <ul class="list-disc pl-6 my-4 space-y-2">
+              {block.children
+                .filter((child) => child.type === "list-item")
+                .map((child) => (
+                  <li class="leading-relaxed">
+                    {child.children?.map((grandChild) => (
+                      <Fragment>
+                        {grandChild.type === "link" ? (
+                          <a
+                            href={grandChild.url}
+                            target={
+                              grandChild.url?.startsWith("/")
+                                ? "_self"
+                                : "_blank"
+                            }
+                            rel="noopener noreferrer"
+                            class="text-blue-600 hover:text-pink-600 transition-colors underline"
+                          >
+                            {grandChild.text}
+                          </a>
+                        ) : (
+                          <span>{grandChild.text}</span>
+                        )}
+                      </Fragment>
+                    ))}
+                  </li>
+                ))}
+            </ul>
+          )}
+
+          {/* Quote blocks */}
+          {block.type === "quote" && (
+            <blockquote class="border-l-4 border-blue-500 pl-6 my-6 italic text-gray-700 bg-gray-50 py-4 rounded-r-lg">
+              <div class="leading-relaxed">
+                {block.children.map((child) => (
+                  <Fragment>
+                    {child.code ? (
+                      <code class="bg-gray-200 text-gray-800 px-2 py-1 rounded text-sm font-mono not-italic">
+                        {child.text}
+                      </code>
+                    ) : child.type === "link" ? (
+                      <a
+                        href={child.url}
+                        target={child.url?.startsWith("/") ? "_self" : "_blank"}
+                        rel="noopener noreferrer"
+                        class="text-blue-600 hover:text-pink-600 transition-colors underline"
+                      >
+                        {child.children?.[0]?.text || child.text}
+                      </a>
+                    ) : (
+                      <span>{child.text}</span>
+                    )}
+                  </Fragment>
+                ))}
+              </div>
+            </blockquote>
+          )}
+
+          {/* Image blocks */}
+          {block.type === "image" && block.image?.url && (
+            <figure class="my-8">
+              <div class="rounded-lg overflow-hidden shadow-lg">
+                <img
+                  src={block.image.url}
+                  alt={block.image.alternativeText || ""}
+                  class="w-full h-auto object-cover"
+                  width={block.image.width}
+                  height={block.image.height}
+                  loading="lazy"
+                />
+              </div>
+              {(block.image.caption || block.image.alternativeText) && (
+                <figcaption class="text-center text-sm text-gray-500 mt-3 italic">
+                  {block.image.caption || block.image.alternativeText}
+                </figcaption>
+              )}
+            </figure>
+          )}
+        </Fragment>
+      ))}
+    </div>
+  )
+}
 
 <style>
   .blocks-content {
@@ -303,7 +309,7 @@ const { content, className = '' } = Astro.props;
   }
 
   .blocks-content code {
-    font-family: 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-family: "Fira Code", "Consolas", "Monaco", "Courier New", monospace;
   }
 
   .blocks-content img {

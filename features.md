@@ -13,7 +13,7 @@ Astro template for Markket storefronts
 - [ ] Display individual article
 - [ ] Display pages list, component, index page
 - [ ] Display articles list, component, index page, pagination
-- [ ] Layout, with SEO components, postghog
+- [x] Layout, with SEO components, postghog
 - [x] Github action build scripts
 - [x] homepage structure
 - [x] Cafecito, connects with markket api
