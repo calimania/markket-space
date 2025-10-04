@@ -1,0 +1,483 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import BlocksContent from "../../components/BlocksContent.astro";
+
+const pages = await getCollection("pages");
+const page = pages.find((p) => p.data.slug == "products")?.data;
+
+const storeData = await getCollection("store");
+const store = storeData[0]?.data || {};
+const storeName = store.title || "Markkët Products";
+const storeCover = store.Cover;
+---
+
+<BaseLayout
+  title={page?.SEO?.metaTitle || store.SEO?.metaTitle}
+  description={page?.SEO?.metaDescription || store.SEO?.metaDescription}
+  image={page?.SEO?.socialImage?.formats?.large?.url ||
+    page?.SEO?.socialImage?.url ||
+    storeCover?.url}
+>
+  <header class="page-header" slot="header">
+    <div class="container">
+      <nav class="main-nav">
+        <a href="/" class="logo">{storeName}</a>
+        <div class="nav-links">
+          <a href="/" class="nav-link">Home</a>
+          <a href="/about" class="nav-link active">About</a>
+          <a
+            href="https://github.com/calimania/markket-space"
+            class="nav-link"
+            target="_blank"
+          >
+            GitHub
+          </a>
+          <a
+            href="https://de.markket.place/auth/magic"
+            class="nav-button"
+            target="_blank"
+          >
+            Get Started
+          </a>
+        </div>
+      </nav>
+    </div>
+  </header>
+  <section class="products-hero">
+    <div class="container">
+      <div class="products-hero-content">
+        <div class="hero-text">
+          <h1>{page?.Title || "Markkët Space Blog"}</h1>
+          <p class="about-subtitle">
+            {
+              page?.SEO?.metaDescription ||
+                "Articles and updates for the seller community."
+            }
+          </p>
+        </div>
+        {
+          page?.SEO?.socialImage?.url && (
+            <div class="hero-image">
+              <img
+                src={page.SEO.socialImage.url}
+                alt={page.Title || "Markkët Space Products"}
+                loading="eager"
+              />
+            </div>
+          )
+        }
+      </div>
+    </div>
+  </section>
+  {
+    page?.Content && page.Content.length > 0 && (
+      <section class="page-content-section">
+        <div class="container">
+          <BlocksContent content={page.Content} className="page-content" />
+        </div>
+      </section>
+    )
+  }
+</BaseLayout>
+<style>
+  /* Page Header */
+  .page-header {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .main-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+
+  .logo:hover {
+    color: var(--primary);
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  .nav-link {
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+    position: relative;
+  }
+
+  .nav-link:hover,
+  .nav-link.active {
+    color: var(--primary);
+  }
+
+  .nav-link.active::after {
+    content: "";
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--primary);
+    border-radius: 1px;
+  }
+
+  .nav-button {
+    background: var(--primary);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.3s ease;
+  }
+
+  .nav-button:hover {
+    background: var(--primary-dark);
+  }
+
+  /* About Hero Section */
+  .products-hero {
+    padding: 6rem 0 4rem;
+    background: linear-gradient(
+      135deg,
+      var(--primary) 0%,
+      var(--secondary) 100%
+    );
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .products-hero::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(
+      circle at 70% 30%,
+      rgba(255, 255, 255, 0.1) 0%,
+      transparent 50%
+    );
+    pointer-events: none;
+  }
+
+  .products-hero-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-text h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    color: white;
+    line-height: 1.1;
+  }
+
+  .about-subtitle {
+    font-size: 1.25rem;
+    line-height: 1.6;
+    opacity: 0.9;
+    margin-bottom: 0;
+  }
+
+  .hero-image {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .hero-image img {
+    width: 100%;
+    max-width: 400px;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+  }
+
+  .hero-image img:hover {
+    transform: translateY(-5px) scale(1.02);
+  }
+
+  /* Page Content Section */
+  .page-content-section {
+    padding: 4rem 0;
+    background: var(--bg);
+  }
+
+  .page-content-section .container {
+    max-width: 800px;
+  }
+
+  :global(.page-content) {
+    padding: 2rem;
+  }
+
+  :global(.page-content h1),
+  :global(.page-content h2),
+  :global(.page-content h3) {
+    color: var(--text);
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  :global(.page-content p) {
+    margin-bottom: 1.5rem;
+    line-height: 1.7;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .products-hero-content {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      text-align: center;
+    }
+
+    .hero-text h1 {
+      font-size: 2.5rem;
+    }
+
+    .about-subtitle {
+      font-size: 1.125rem;
+    }
+
+    .hero-image img {
+      max-width: 300px;
+      height: 225px;
+    }
+
+    .nav-links {
+      gap: 1rem;
+    }
+
+    .nav-link {
+      font-size: 0.9rem;
+    }
+  }
+
+  /* Page Content Section */
+  .page-content-section {
+    padding: 4rem 0;
+    background: var(--bg);
+  }
+
+  .page-content-section .container {
+    max-width: 800px;
+  }
+
+  .page-content-section .container {
+    max-width: 900px;
+  }
+
+  .nav-link {
+    margin-right: 16px;
+  }
+
+  :global(.page-content) {
+    background: var(--bg);
+    padding: 3rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-light);
+    color: var(--text);
+  }
+
+  :global(.page-content h1),
+  :global(.page-content h2),
+  :global(.page-content h3) {
+    color: var(--text) !important;
+  }
+
+  :global(.page-content p) {
+    color: var(--text) !important;
+  }
+
+  :global(.page-content a) {
+    color: var(--primary) !important;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .features-section {
+      padding: 4rem 0;
+    }
+
+    .features-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    .feature-card {
+      padding: 2rem 1.5rem;
+    }
+
+    .feature-icon {
+      width: 60px;
+      height: 60px;
+    }
+
+    .creator-types {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .creator-type {
+      padding: 1rem;
+    }
+
+    .creator-type .creator-icon {
+      width: 40px;
+      height: 40px;
+    }
+
+    :global(.page-content) {
+      padding: 2rem;
+    }
+
+    /* Page Header */
+    .page-header {
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .main-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text);
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .logo:hover {
+      color: var(--primary);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .nav-link {
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+      position: relative;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      color: var(--primary);
+    }
+
+    .nav-link.active::after {
+      content: "";
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--primary);
+      border-radius: 1px;
+    }
+
+    .nav-button {
+      background: var(--primary);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background 0.3s ease;
+    }
+
+    .nav-button:hover {
+      background: var(--primary-dark);
+    }
+
+    /* About Hero Section */
+    .products-hero {
+      padding: 6rem 0 4rem;
+      background: linear-gradient(
+        135deg,
+        var(--primary) 0%,
+        var(--secondary) 100%
+      );
+      color: white;
+      text-align: center;
+    }
+
+    .products-hero-content h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      color: white;
+    }
+
+    .about-subtitle {
+      font-size: 1.25rem;
+      line-height: 1.6;
+      max-width: 600px;
+      margin: 0 auto;
+      opacity: 0.9;
+    }
+
+    .social-proof-cta .cta-primary,
+    .social-proof-cta .cta-secondary {
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .creator-types {
+      grid-template-columns: 1fr;
+    }
+
+    .social-proof-section {
+      padding: 3rem 0;
+    }
+  }
+</style>
