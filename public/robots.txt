@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://sell.markket.place/sitemap-index.xml
+

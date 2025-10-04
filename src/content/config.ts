@@ -13,6 +13,10 @@ const config: StrapiConfig = {
   sync_interval: 6000,
 };
 
+export const markket = {
+  ...config,
+};
+
 // @TODO: Find a better type to avoid excessively deep and possibly infinite errors
 type Loader = any;
 
