@@ -1,12 +1,5 @@
 @import "tailwindcss";
 
-/* Reset and Base Styles */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
 :root {
   /* Brand Colors - Vibrant and artistic */
   --primary: #E4007C;

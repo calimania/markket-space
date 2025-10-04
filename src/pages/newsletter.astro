@@ -7,8 +7,14 @@ const pages = await getCollection("pages");
 const page = pages.find((p) => p.data.slug == "newsletter")?.data;
 
 const storeData = await getCollection("store");
-const store = storeData[0]?.data || {};
+const store = {
+  documentId: (storeData[0] as any)?.documentId,
+  ...storeData[0]?.data,
+};
+
 const storeCover = store.Cover;
+
+import SubscribeForm from "../components/subscribe-form";
 ---
 
 <PageLayout
@@ -18,8 +24,7 @@ const storeCover = store.Cover;
     page?.SEO?.socialImage?.url ||
     storeCover?.url}
   heroTitle={page?.Title || "Space Newsletter"}
-  heroSubtitle={page?.SEO?.metaDescription ||
-    "Sign up for email updates."}
+  heroSubtitle={page?.SEO?.metaDescription || "Sign up for email updates."}
   heroImage={page?.SEO?.socialImage?.url || storeCover?.url}
   heroLqip={page?.SEO?.socialImage?.formats?.small?.url}
   heroAspect={page?.SEO?.meta?.heroAspect || "4/5"}
@@ -29,6 +34,12 @@ const storeCover = store.Cover;
     page?.Content && page.Content.length > 0 && (
       <section class="page-content-section">
         <div class="container">
+          <div>
+            <SubscribeForm
+              store={{ documentId: store?.documentId }}
+              client:idle
+            />
+          </div>
           <BlocksContent content={page.Content} className="page-content" />
         </div>
       </section>
