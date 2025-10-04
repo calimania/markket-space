@@ -1,0 +1,37 @@
+---
+import { getCollection } from "astro:content";
+import PageLayout from "../../layouts/PageLayout.astro";
+import BlocksContent from "../../components/BlocksContent.astro";
+
+const pages = await getCollection("pages");
+const page = pages.find((p) => p.data.slug == "products")?.data;
+
+const storeData = await getCollection("store");
+const store = storeData[0]?.data || {};
+const storeCover = store.Cover;
+---
+
+<PageLayout
+  title={page?.SEO?.metaTitle || store.SEO?.metaTitle}
+  description={page?.SEO?.metaDescription || store.SEO?.metaDescription}
+  image={page?.SEO?.socialImage?.formats?.large?.url ||
+    page?.SEO?.socialImage?.url ||
+    storeCover?.url}
+  heroTitle={page?.Title || "Products"}
+  heroSubtitle={page?.SEO?.metaDescription ||
+    "Browse products and templates from creators."}
+  heroImage={page?.SEO?.socialImage?.url || storeCover?.url}
+  heroLqip={page?.SEO?.socialImage?.formats?.small?.url}
+  heroAspect={page?.SEO?.meta?.heroAspect || "4/5"}
+  heroVariant={page?.SEO?.meta?.heroVariant || "spacious"}
+>
+  {
+    page?.Content && page.Content.length > 0 && (
+      <section class="page-content-section">
+        <div class="container">
+          <BlocksContent content={page.Content} className="page-content" />
+        </div>
+      </section>
+    )
+  }
+</PageLayout>

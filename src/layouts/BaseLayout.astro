@@ -1,6 +1,6 @@
 ---
 import "../styles/base.css";
-import Posthog from '../components/posthog.astro';
+import Posthog from "../components/posthog.astro";
 
 export interface Props {
   title?: string;
@@ -8,7 +8,7 @@ export interface Props {
   image?: string;
   canonical?: string;
   noindex?: boolean;
-  type?: 'website' | 'article' | 'product';
+  type?: "website" | "article" | "product";
   publishedTime?: string;
   modifiedTime?: string;
   author?: string;
@@ -26,7 +26,7 @@ const {
   image = "/favicon.svg",
   canonical,
   noindex = false,
-  type = 'website',
+  type = "website",
   publishedTime,
   modifiedTime,
   author,
@@ -35,29 +35,30 @@ const {
   alternateLocales = [],
   structuredData,
   className = "",
-  favicon = '/favicon.png'
+  favicon = "/favicon.png",
 } = Astro.props;
 
 // Get the canonical URL - use provided canonical or current URL
 const canonicalURL = canonical || new URL(Astro.url.pathname, Astro.site);
 
 // Ensure image is absolute URL
-const absoluteImage = image?.startsWith('http')
+const absoluteImage = image?.startsWith("http")
   ? image
   : new URL(image, Astro.site);
 
 // Generate structured data for SEO
 const defaultStructuredData = {
   "@context": "https://schema.org",
-  "@type": type === 'article' ? "Article" : type === 'product' ? "Product" : "WebSite",
-  "name": title,
-  "description": description,
-  "url": canonicalURL,
-  ...(image && { "image": absoluteImage }),
-  ...(author && { "author": { "@type": "Person", "name": author } }),
-  ...(publishedTime && { "datePublished": publishedTime }),
-  ...(modifiedTime && { "dateModified": modifiedTime }),
-  ...(siteName && { "publisher": { "@type": "Organization", "name": siteName } })
+  "@type":
+    type === "article" ? "Article" : type === "product" ? "Product" : "WebSite",
+  name: title,
+  description: description,
+  url: canonicalURL,
+  ...(image && { image: absoluteImage }),
+  ...(author && { author: { "@type": "Person", name: author } }),
+  ...(publishedTime && { datePublished: publishedTime }),
+  ...(modifiedTime && { dateModified: modifiedTime }),
+  ...(siteName && { publisher: { "@type": "Organization", name: siteName } }),
 };
 
 const finalStructuredData = structuredData || defaultStructuredData;
@@ -70,6 +71,7 @@ const finalStructuredData = structuredData || defaultStructuredData;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content={Astro.generator} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
 
     <!-- Primary Meta Tags -->
     <title>{title}</title>
@@ -86,11 +88,21 @@ const finalStructuredData = structuredData || defaultStructuredData;
     <meta property="og:image" content={absoluteImage} />
     <meta property="og:site_name" content={siteName} />
     <meta property="og:locale" content={locale} />
-    {alternateLocales.map(({ locale: altLocale, url }) => (
-      <meta property="og:locale:alternate" content={altLocale} />
-    ))}
-    {publishedTime && <meta property="article:published_time" content={publishedTime} />}
-    {modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
+    {
+      alternateLocales.map(({ locale: altLocale, url }) => (
+        <meta property="og:locale:alternate" content={altLocale} />
+      ))
+    }
+    {
+      publishedTime && (
+        <meta property="article:published_time" content={publishedTime} />
+      )
+    }
+    {
+      modifiedTime && (
+        <meta property="article:modified_time" content={modifiedTime} />
+      )
+    }
     {author && <meta property="article:author" content={author} />}
 
     <!-- Twitter -->
@@ -113,12 +125,17 @@ const finalStructuredData = structuredData || defaultStructuredData;
     />
 
     <!-- Alternate Language Links -->
-    {alternateLocales.map(({ locale: altLocale, url }) => (
-      <link rel="alternate" hreflang={altLocale} href={url} />
-    ))}
+    {
+      alternateLocales.map(({ locale: altLocale, url }) => (
+        <link rel="alternate" hreflang={altLocale} href={url} />
+      ))
+    }
 
     <!-- Structured Data -->
-    <script type="application/ld+json" set:html={JSON.stringify(finalStructuredData)} />
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(finalStructuredData)}
+    />
 
     <!-- Additional head content from pages -->
     <slot name="head" />
@@ -136,7 +153,18 @@ const finalStructuredData = structuredData || defaultStructuredData;
           <nav class="main-nav">
             <a href="/" class="logo">{siteName}</a>
             <div class="nav-links">
-              <!-- <a href="/blocks-demo" class="nav-link">Demo</a> -->
+              {
+                ["about", "blog", "products"].map((link) => {
+                  return (
+                    <a
+                      href={`/${link}`}
+                      class={`nav-link ${Astro.url.pathname?.includes(link) ? "current" : ""}`}
+                    >
+                      {link.charAt(0).toUpperCase() + link.slice(1)}
+                    </a>
+                  );
+                })
+              }
               <a
                 href="https://de.markket.place/auth/magic"
                 class="nav-button"
@@ -162,22 +190,41 @@ const finalStructuredData = structuredData || defaultStructuredData;
         <div class="container">
           <div class="footer-content">
             <div class="footer-section">
-            <h3 class="">{siteName}</h3>
-              <p>A cool, easy ecommerce platform built by artists, for artists</p>
+              <h3 class="">{siteName}</h3>
+              <p>
+                A cool, easy ecommerce platform built by artists, for artists
+              </p>
             </div>
             <div class="footer-section">
               <h4>Quick Links</h4>
               <ul>
                 <li><a href="/">Home</a></li>
-                <li><a href="https://github.com/calimania/markket-space" target="_blank">GitHub</a></li>
+                <li>
+                  <a href="/newsletter">Newsletter</a>
+                </li>
               </ul>
             </div>
             <div class="footer-section">
               <h4>Get Started</h4>
               <ul>
-                <li><a href="https://de.markket.place/auth/magic" target="_blank">Register / login</a></li>
-                <li><a href="https://de.markket.place/store/next/showcase" target="_blank">Templates</a></li>
-                <li><a href="https://de.markket.place/store/dev" target="_blank">Dev store</a></li>
+                <li>
+                  <a href="https://de.markket.place/auth/magic" target="_blank">
+                    Register / login
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://de.markket.place/store/next/showcase"
+                    target="_blank"
+                  >
+                    Templates
+                  </a>
+                </li>
+                <li>
+                  <a href="https://de.markket.place/store/dev" target="_blank">
+                    Dev store
+                  </a>
+                </li>
               </ul>
             </div>
           </div>
@@ -193,7 +240,6 @@ const finalStructuredData = structuredData || defaultStructuredData;
 </html>
 
 <style>
-  /* Accessibility */
   .skip-link {
     position: absolute;
     top: -40px;
@@ -254,6 +300,11 @@ const finalStructuredData = structuredData || defaultStructuredData;
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
     transition: all 0.2s;
+    margin-right: 16px;
+  }
+
+  .nav-link.current {
+    color: var(--primary);
   }
 
   .nav-link:hover {
