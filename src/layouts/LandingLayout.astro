@@ -1,8 +1,8 @@
 ---
-import BaseLayout from './BaseLayout.astro';
+import BaseLayout from "./BaseLayout.astro";
 import { getCollection } from "astro:content";
-import { IconInfinity, IconPalette, IconSparkles } from '@tabler/icons-react';
-import { marked } from 'marked';
+import { IconInfinity, IconPalette, IconSparkles } from "@tabler/icons-react";
+import { marked } from "marked";
 
 export interface Props {
   title?: string;
@@ -20,13 +20,16 @@ export interface Props {
 const storeData = await getCollection("store");
 const store = storeData[0]?.data || {};
 const storeName = store.title || "Markkët Space";
-const storeDescription = store.Description || "The hub to launch, grow, and thrive";
+const storeDescription =
+  store.Description || "The hub to launch, grow, and thrive";
 const parsedDescription = marked.parse(storeDescription);
 
 const {
   title = store.SEO?.metaTitle || `${storeName} - Create Your Store`,
   description = store.SEO?.metaDescription || storeDescription,
-  image = store.SEO?.socialImage?.formats?.large?.url || store.SEO?.socialImage?.url || "/favicon.svg",
+  image = store.SEO?.socialImage?.formats?.large?.url ||
+    store.SEO?.socialImage?.url ||
+    "/favicon.svg",
   heroTitle = storeName,
   heroCtaText = "Featured Stores",
   heroCtaUrl = "https://de.markket.place/stores",
@@ -45,25 +48,25 @@ const {
   structuredData={{
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": storeName,
-    "description": storeDescription,
-    "url": Astro.site,
-    "publisher": {
+    name: storeName,
+    description: storeDescription,
+    url: Astro.site,
+    publisher: {
       "@type": "Organization",
-      "name": "Markkët Space",
-      "logo": {
+      name: "Markkët Space",
+      logo: {
         "@type": "ImageObject",
-        "url": new URL("/favicon.svg", Astro.site)
-      }
-    },
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": {
-        "@type": "EntryPoint",
-        "urlTemplate": `${heroCtaUrl}?q={search_term_string}`
+        url: new URL("/favicon.svg", Astro.site),
       },
-      "query-input": "required name=search_term_string"
-    }
+    },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${heroCtaUrl}?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
   }}
 >
   <!-- Custom header for landing pages -->
@@ -74,14 +77,13 @@ const {
           {storeName}
         </a>
         <div class="nav-links">
-          <a href="/blocks-demo" class="nav-link">Demo</a>
-          <a href="https://github.com/calimania/markket-space" class="nav-link" target="_blank">GitHub</a>
+          <a href="/about" class="nav-link">About</a>
           <a
             href="https://de.markket.place/auth/magic"
             class="nav-button"
             target="_blank"
           >
-            Start Selling
+            Get Started
           </a>
         </div>
       </nav>
@@ -92,30 +94,36 @@ const {
   <section class="hero-section">
     <div class="container">
       <div class="hero-content">
-        <div class="hero-badge">keep the internet yours</div>
-        <h1 class="hero-title">{heroTitle}</h1>
-        <p>Simple Ecommerce
-          <br>Add content, products, set prices, and connect Stripe for fast, secure payouts
+        <div class="hero-badge">✨ Made by creators, for creators</div>
+        <h1 class="hero-title">Turn your passion into profit</h1>
+        <p class="hero-subtitle">
+          Launch your professional online store in minutes. Sell digital
+          downloads, physical products, subscriptions, and services with our
+          creator-focused ecommerce platform.
         </p>
         <div class="hero-stats">
           <div class="stat">
             <div class="stat-number">Free</div>
-            <div class="stat-label">To get started</div>
+            <div class="stat-label">to start selling</div>
           </div>
           <div class="stat">
-            <div class="stat-number">Quick</div>
-            <div class="stat-label">Setup time</div>
+            <div class="stat-number">5min</div>
+            <div class="stat-label">setup time</div>
           </div>
           <div class="stat">
             <div class="stat-number">
               <IconInfinity size={48} client:load />
             </div>
-            <div class="stat-label">Possibilities</div>
+            <div class="stat-label">possibilities</div>
           </div>
         </div>
         <div class="hero-actions">
-          <a href="https://de.markket.place/auth/magic" class="cta-primary" target="_blank">
-            Register
+          <a
+            href="https://de.markket.place/auth/magic"
+            class="cta-primary"
+            target="_blank"
+          >
+            Start Your Store Free →
           </a>
           <a href={heroCtaUrl} class="cta-secondary" target="_blank">
             {heroCtaText}
@@ -123,20 +131,22 @@ const {
         </div>
         <div class="hero-community">
           <p>
-            <IconPalette size={16} client:load /> Join a creative community • Built for flexibility
-            <IconSparkles size={16} client:load /> Sell art, digital downloads, subscriptions, or services
+            <IconPalette size={16} client:load /> Join 100+ creators •
+            <IconSparkles size={16} client:load /> Shape the future together
           </p>
         </div>
       </div>
-      {store.Cover && (
-        <div class="hero-image">
-          <img
-            src={(store.Cover as any).formats?.large?.url || store.Cover.url}
-            alt={store.Cover.alternativeText || "Store showcase"}
-            loading="eager"
-          />
-        </div>
-      )}
+      {
+        store.Cover && (
+          <div class="hero-image">
+            <img
+              src={(store.Cover as any).formats?.large?.url || store.Cover.url}
+              alt={store.Cover.alternativeText || "Store showcase"}
+              loading="eager"
+            />
+          </div>
+        )
+      }
     </div>
   </section>
 
@@ -144,26 +154,30 @@ const {
   <slot />
 
   <!-- Store Info Section (optional) -->
-  {showStoreInfo && (
-    <section class="store-info-section">
-      <div class="container">
-        <div class="store-content">
-          <div class="store-details">
-            <h2>About {storeName}</h2>
-            <div set:html={parsedDescription} />
-          </div>
-          {store.Logo && (
-            <div class="store-logo">
-              <img
-                src={(store.Logo as any).formats?.medium?.url || store.Logo.url}
-                alt={store.Logo.alternativeText || "Store logo"}
-              />
+  {
+    showStoreInfo && (
+      <section class="store-info-section">
+        <div class="container">
+          <div class="store-content">
+            <div class="store-details">
+              <h2>About {storeName}</h2>
+              <div set:html={parsedDescription} />
             </div>
-          )}
+            {store.Logo && (
+              <div class="store-logo">
+                <img
+                  src={
+                    (store.Logo as any).formats?.medium?.url || store.Logo.url
+                  }
+                  alt={store.Logo.alternativeText || "Store logo"}
+                />
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </section>
-  )}
+      </section>
+    )
+  }
 
   <!-- CTA Section -->
   <section class="final-cta-section">
@@ -235,8 +249,8 @@ const {
     gap: 2rem;
   }
 
-  .nav-link {
-    color: var(--text);
+  .nav-link:link {
+    color: black;
     text-decoration: none;
     font-weight: 500;
     transition: color 0.3s ease;
@@ -277,13 +291,17 @@ const {
   }
 
   .hero-section::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.3) 0%, transparent 50%);
+    background: radial-gradient(
+      circle at 30% 20%,
+      rgba(255, 255, 255, 0.3) 0%,
+      transparent 50%
+    );
     pointer-events: none;
   }
 
@@ -296,6 +314,18 @@ const {
     z-index: 1;
     max-width: 900px;
     margin: 0 auto;
+    animation: fadeInUp 1s ease-out;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .hero-badge {
@@ -379,6 +409,18 @@ const {
     border-radius: 1.5rem;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease;
+    animation: fadeInScale 1.2s ease-out 0.3s both;
+  }
+
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 
   .hero-image img:hover {
@@ -478,7 +520,6 @@ const {
     margin-bottom: 2rem;
     line-height: 1.7;
   }
-
 
   .store-logo {
     text-align: center;
