@@ -152,7 +152,18 @@ const finalStructuredData = structuredData || defaultStructuredData;
           <nav class="main-nav">
             <a href="/" class="logo">{siteName}</a>
             <div class="nav-links">
-              <!-- <a href="/blocks-demo" class="nav-link">Demo</a> -->
+              {
+                ["about", "blog", "products"].map((link) => {
+                  return (
+                    <a
+                      href={`/${link}`}
+                      class={`nav-link ${Astro.url.pathname?.includes(link) ? "current" : ""}`}
+                    >
+                      {link.charAt(0).toUpperCase() + link.slice(1)}
+                    </a>
+                  );
+                })
+              }
               <a
                 href="https://de.markket.place/auth/magic"
                 class="nav-button"
@@ -188,12 +199,7 @@ const finalStructuredData = structuredData || defaultStructuredData;
               <ul>
                 <li><a href="/">Home</a></li>
                 <li>
-                  <a
-                    href="https://github.com/calimania/markket-space"
-                    target="_blank"
-                  >
-                    GitHub
-                  </a>
+                  <a href="/newsletter">Newsletter</a>
                 </li>
               </ul>
             </div>
@@ -294,6 +300,10 @@ const finalStructuredData = structuredData || defaultStructuredData;
     border-radius: 0.5rem;
     transition: all 0.2s;
     margin-right: 16px;
+  }
+
+  .nav-link.current {
+    color: var(--primary);
   }
 
   .nav-link:hover {

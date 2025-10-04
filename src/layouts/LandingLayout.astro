@@ -77,7 +77,18 @@ const {
           {storeName}
         </a>
         <div class="nav-links">
-          <a href="/about" class="nav-link">About</a>
+          {
+            ["about", "blog", "products"].map((link) => {
+              return (
+                <a
+                  href={`/${link}`}
+                  class={`nav-link ${Astro.url.pathname?.includes(link) ? "current" : ""}`}
+                >
+                  {link.charAt(0).toUpperCase() + link.slice(1)}
+                </a>
+              );
+            })
+          }
           <a
             href="https://de.markket.place/auth/magic"
             class="nav-button"
@@ -139,11 +150,15 @@ const {
       {
         store.Cover && (
           <div class="hero-image">
-            <img
-              src={(store.Cover as any).formats?.large?.url || store.Cover.url}
-              alt={store.Cover.alternativeText || "Store showcase"}
-              loading="eager"
-            />
+            <div class="img-frame">
+              <img
+                src={
+                  (store.Cover as any).formats?.large?.url || store.Cover.url
+                }
+                alt={store.Cover.alternativeText || "Store showcase"}
+                loading="eager"
+              />
+            </div>
           </div>
         )
       }
