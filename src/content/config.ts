@@ -47,7 +47,7 @@ function strapiLoader(query: StrapiQueryOptions) {
 const pages = defineCollection({
   loader: strapiLoader({
     contentType: "page",
-    sort: 'slug:DESC',
+    sort: 'slug:ASC',
     filter: `filters[store][slug][$eq]=${config.store_slug}`,
     populate: 'SEO.socialImage,albums,albums.tracks,albums.cover'
   }) as Loader,
