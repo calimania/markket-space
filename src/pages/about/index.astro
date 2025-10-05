@@ -14,7 +14,7 @@ const storeCover = store.Cover;
 const allPages = await getCollection("pages");
 // exclude the about page itself and any that opt-out via ShowInAbout === false
 const pageCards = allPages
-  .filter((p) => p.data?.slug !== "about")
+  .filter((p) => !["about", "receipt", "product"].includes(p.data.slug))
   .filter((p) => (p.data as any)?.ShowInAbout !== false)
   .slice(0, 8);
 

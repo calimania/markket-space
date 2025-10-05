@@ -201,6 +201,68 @@ nav {
     height: auto;
   }
 }
+/* Modal & dialog styling for better contrast */
+.modal-panel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  backdrop-filter: blur(6px);
+}
+
+.modal-panel button {
+  box-shadow: var(--shadow-soft);
+}
+
+/* Floating CTA and hero CTA styles */
+.buy-cta {
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  color: var(--text-on-primary);
+  padding: 0.75rem 1.25rem;
+  border-radius: 9999px;
+  border: none;
+  font-weight: 700;
+}
+
+.buy-cta-outline {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+}
+
+/* Make form controls inside modal clearly readable on dark theme */
+.modal-panel input,
+.modal-panel select,
+.modal-panel textarea {
+  background: #fff;
+  /* keep input bg white for contrast */
+  color: var(--bg);
+  /* dark text on white */
+  border: 1px solid rgba(2, 6, 23, 0.08);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+}
+
+.modal-panel input::placeholder,
+.modal-panel textarea::placeholder {
+  color: #6b7280;
+  /* neutral placeholder */
+}
+
+/* Slideshow thumbnail active state */
+.flex-col [data-astro-image-url].active {
+  outline: 3px solid rgba(99, 102, 241, 0.9);
+  outline-offset: 2px;
+}
+
+.flex-col [data-astro-image-url]:focus {
+  outline: 2px dashed rgba(255, 255, 255, 0.12);
+}
+
+/* Backdrop overlay tweak when modal opens */
+/* overlay rules are handled inline or via utility classes */
 /* Features Section */
 .features {
   padding: 4rem 0;
