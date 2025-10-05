@@ -1,0 +1,103 @@
+---
+import { getCollection } from 'astro:content';
+import PageLayout from '../layouts/PageLayout.astro';
+import SubscribeForm from '../components/subscribe-form';
+
+const storeEntries = await getCollection('store');
+const entry = storeEntries?.[0] || {};
+const store = { documentId: (entry as any)?.documentId || '', ...(entry as any)?.data || {} };
+
+const title = 'Receipt';
+const subtitle = 'Thanks for your order — here is a summary.';
+const heroImage = store?.Cover?.url || '';
+const heroLqip = (store as any)?.Cover?.formats?.small?.url || '';
+import { markket }from '../../markket.config';
+const __receipt_api_url = markket?.api_url || '';
+
+---
+
+<PageLayout
+  title={title}
+  description={subtitle}
+  image={heroImage}
+  heroTitle={title}
+  heroSubtitle={subtitle}
+  heroImage={heroImage}
+  heroLqip={heroLqip}
+  heroAspect="4/5"
+  heroVariant="compact"
+>
+  <main class="container my-12">
+    <section class="mx-auto max-w-3xl rounded-lg p-6 bg-surface border" role="region" aria-labelledby="receipt-heading">
+      <h2 id="receipt-heading" class="text-2xl font-semibold">Order receipt</h2>
+      <p class="text-sm mt-1 text-muted">This page decodes a receipt payload from the URL and renders a printable copy for your records.</p>
+
+      <div id="receipt-empty" class="mt-6">
+        <p class="text-muted">No receipt data detected. Append <code>?receipt=</code> followed by a URL-encoded JSON object to the URL (example in console).</p>
+      </div>
+
+      <div id="receipt" class="hidden mt-6" aria-live="polite">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-sm text-muted">Order</p>
+            <h3 id="order-id" class="text-lg font-medium">#<span id="order-number">—</span></h3>
+            <p id="order-date" class="text-sm text-muted mt-1">—</p>
+
+            <p class="text-sm text-muted mt-4">Billed to</p>
+            <p id="order-email" class="font-medium break-words">—</p>
+            <p id="order-shipping" class="text-sm mt-2 text-muted whitespace-pre-line break-words">—</p>
+          </div>
+        </div>
+
+        <div class="mt-6 border-t pt-4">
+          <h4 class="text-sm font-semibold">Items</h4>
+          <ul id="order-items" class="mt-2 space-y-3"></ul>
+        </div>
+
+        <div class="mt-6 border-t pt-4 flex justify-end gap-6">
+          <div>
+            <p class="text-sm text-muted">Subtotal</p>
+            <p id="order-subtotal" class="font-medium">—</p>
+          </div>
+          <div>
+            <p class="text-sm text-muted">Total</p>
+            <p id="order-total" class="text-xl font-bold">—</p>
+          </div>
+        </div>
+
+        <!-- actions removed (print/view) per UI preference -->
+      </div>
+    </section>
+
+    <section class="mt-10">
+      <div class="mx-auto max-w-6xl px-4">
+        <h3 class="text-lg font-semibold">Keep in touch</h3>
+        <p class="text-sm mt-1 text-muted">Join our newsletter for seller tips and updates.</p>
+      </div>
+
+      <div class="mt-6">
+        <div class="mx-auto max-w-7xl px-4">
+          <SubscribeForm store={{ documentId: store?.documentId }} client:idle />
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- server-rendered config for client module -->
+  <div id="receipt-config" data-api-url={__receipt_api_url} style="display:none"></div>
+  <script type="module">
+    import('/src/scripts/receipt.client.ts')
+      .then((mod) => {
+        const init = mod?.default || mod?.initReceipt || mod?.init;
+        if (typeof init === 'function') {
+          try { init(); } catch (e) { console.error('receipt.init failed', e); }
+        }
+      })
+      .catch((err) => console.error('Failed to load receipt client module', err));
+  </script>
+
+</PageLayout>
+
+<style>
+  .text-muted { color: var(--text-muted); }
+</style>
