@@ -69,7 +69,7 @@ export function SubscribeForm({ store }: SubscribeFormProps) {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto my-16 px-4">
+    <div className="w-full max-w-4xl md:max-w-6xl lg:max-w-7xl mx-auto my-16 px-4">
       <div className="relative overflow-hidden rounded-2xl shadow-2xl" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(250,250,255,0.9) 100%)' }}>
         <div className="pointer-events-none absolute -right-24 -top-24 w-64 h-64 rounded-full bg-gradient-to-tr from-pink-300 to-indigo-400 opacity-30 blur-3xl" />
 
