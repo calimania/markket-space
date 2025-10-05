@@ -4,83 +4,88 @@
 
 #### Ready to Sell
 
-### Configuration
+# Markkët Space — Storefront starter (Astro)
 
+A small, content-first storefront template built with Astro and Strapi
 
-```env
-PUBLIC_STRAPI_URL=https://api.markket.place  # Markkët CMS URL
-PUBLIC_STORE_SLUG=sell                       # Store identifier
-PUBLIC_POSTHOG_KEY=                          # Analytics key (optional)
-PUBLIC_URL=https://sell.markket.place        # Your live site URL
+It's designed as an example you can copy from, or fork the repo you, customize and deploy
+
+This repo contains a minimal set of pages and components you can reuse:
+
+- /blog — article index and list
+- /about — pages and nested pages
+- / — home page showing store info and product listing
+- /receipt — buyer confirmation page (renders session or payload)
+- /newsletter — newsletter landing and subscribe form
+
+The checkout flow in this template is intentionally minimal:
+
+- the product UI opens a checkout modal (client side) that redirects to a payment link
+- The receipt page decodes a receipt payload or resolves a Stripe session via your backend
+
+## Quick start
+
+Prerequisites: Node.js (16+), npm or pnpm
+
+1. Fork or clone this repository.
+2. Install dependencies:
+
+```bash
+npm install
 ```
 
-## Hacktoberfest
+3. Copy environment variables (example in `.env` or your hosting configuration):
 
+```env
+PUBLIC_STRAPI_URL=https://api.markket.place   # Markket - strapi API
+PUBLIC_STORE_SLUG=sell                        # slug identifier from markket
+PUBLIC_POSTHOG_KEY=                           # Optional analytics key
+PUBLIC_URL= # deployment url for canonical and sitemap
+```
 
+4. Run the dev server:
 
-### How to Contribute
+```bash
+npm run dev
+```
 
-1. **🍴 Fork** this repository
-2. **📋 Pick an issue** or suggest improvements
-3. **🔧 Make your changes** following our guidelines
-4. **📤 Submit a PR** with a clear description
+Open http://localhost:3000 and browse the routes above.
 
-### Good First Issues
+## Routes & responsibilities
 
-- 🎨 UI/UX improvements
-- 📱 Mobile responsiveness enhancements
-- 🚀 Performance optimizations
-- 📚 Documentation improvements
-- 🧪 Add tests
-- 🌐 Accessibility improvements
+- / (home)
+	- Shows store metadata and product listings. Product cards provide a checkout modal or direct-to-payment link.
 
-### Contribution Guidelines
-- Keep PRs focused and atomic
-- Write clear commit messages
-- Test your changes locally
-- Update documentation as needed
-- Be respectful and inclusive
+- /blog
+	- Content-driven article index and single article pages powered by Astro content collections.
 
-## 🛠 Tech Stack
+- /about
+	- Simple content pages, supports nested pages.
 
-- **Framework**: [Astro](https://astro.build) - The web framework for content-driven websites
-- **CMS**: [Strapi](https://strapi.io) - Flexible, open-source headless CMS
-- **Analytics**: [PostHog](https://posthog.com) - Product analytics platform
-- **Deployment**: GitHub Actions → GitHub Pages
-- **Styling**: Modern CSS with component-scoped styles
+- /receipt
+	- Buyer confirmation page. The client script will either:
+		- Parse a receipt payload from the URL (?receipt= encoded JSON or ?payload= base64), or
+		- Resolve a Stripe session by POSTing { action: 'stripe.receipt', session_id } to your backend (configured via PUBLIC_STRAPI_URL or markket.config).
+	- The page renders amounts, customer info, shipping (if present), and items.
 
-## 🌐 Live Demo
+- /newsletter
+	- Newsletter landing and a SubscribeForm component (React) that posts to `/api/subscribers`.
 
-🔗 **[https://sell.markket.place](https://sell.markket.place)**
+## Checkout & Receipt notes
 
-We love contributions! Whether you're:
+- Checkout modal: the front-end reads a product's metadata and redirects the buyer to a payment link
 
-- 🐛 Fixing bugs
-- ✨ Adding features
-- 📝 Improving docs
-- 🎨 Enhancing design
-- 🧪 Writing tests
+- Receipt resolving: After checkout, markket redirects back to `/receipt?session_id=...`
 
-All contributions are welcome! Check out our [issues](https://github.com/calimania/markket-space/issues) or create a new one
+## Contributing
 
-## 📄 License
+We welcome contributions. A few tips:
 
-This project is open source and available under the [TSL](LICENSE)
+- Keep changes small and focused
+- Update README and comment code where behaviors are non-obvious
+- Implement additional Markket features
+- Abstract components
 
-## 🏆 Credits & Recognition
+## License
 
-### 🤖 AI Development Team
-
-- **GitHub Copilot** - Primary coding assistant and project architect
-- **Colombian Coffee** - Advanced research and development support
-- **Octogatos** - Community-driven AI innovation and testing
-
-### 🛠️ Technology Stack
-
-- Built with ❤️ using [Astro](https://astro.build)
-- Powered by [Strapi](https://strapi.io) headless CMS
-- Content by [Markkët](https://de.markket.place)
-- Analytics by [PostHog](https://posthog.com)
-- Schema by [Cafecito](https://www.npmjs.com/package/cafecito)
-- Deployed via GitHub Actions
-
+TSL
