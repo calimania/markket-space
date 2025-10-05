@@ -2,36 +2,107 @@
 import { getCollection } from "astro:content";
 import PageLayout from "../../layouts/PageLayout.astro";
 import BlocksContent from "../../components/BlocksContent.astro";
+import { renderExcerpt, imgFor } from "../../lib/entry.utils";
+
+// load store and products
+const storeData = await getCollection("store");
+const store = storeData[0]?.data || {};
+const storeCover = store?.Cover || "";
 
 const pages = await getCollection("pages");
 const page = pages.find((p) => p.data.slug == "products")?.data;
 
-const storeData = await getCollection("store");
-const store = storeData[0]?.data || {};
-const storeCover = store.Cover;
+const products = await getCollection("products");
+// show active products and prefer explicit ordering; limit to 24
+const productCards = products
+  .filter((p) => (p.data as any)?.Active !== false)
+  .slice(0, 24);
+
+function productLinkFor(p: any) {
+  const pd = p.data as any;
+  if (pd?.ExternalUrl) return pd.ExternalUrl;
+  const slug = pd?.slug || p.id;
+  return `/products/${slug}`;
+}
+
+const heroTitle = store?.SEO?.metaTitle || "Products";
+const heroSubtitle =
+  store?.SEO?.metaDescription || "Explore products from our creators.";
+const heroImage = store?.SEO?.socialImage?.url || storeCover?.url || "";
+const heroLqip =
+  (store?.SEO as any)?.socialImage?.formats?.small?.url ||
+  (storeCover as any)?.formats?.small?.url ||
+  "";
+const heroAspect = (store?.SEO as any)?.meta?.heroAspect || "4/5";
+const heroVariant = (store?.SEO as any)?.meta?.heroVariant || "spacious";
 ---
 
 <PageLayout
-  title={page?.SEO?.metaTitle || store.SEO?.metaTitle}
-  description={page?.SEO?.metaDescription || store.SEO?.metaDescription}
-  image={page?.SEO?.socialImage?.formats?.large?.url ||
-    page?.SEO?.socialImage?.url ||
-    storeCover?.url}
-  heroTitle={page?.Title || "Products"}
-  heroSubtitle={page?.SEO?.metaDescription ||
-    "Browse products and templates from creators."}
-  heroImage={page?.SEO?.socialImage?.url || storeCover?.url}
-  heroLqip={page?.SEO?.socialImage?.formats?.small?.url}
-  heroAspect={page?.SEO?.meta?.heroAspect || "4/5"}
-  heroVariant={page?.SEO?.meta?.heroVariant || "spacious"}
+  title={heroTitle}
+  description={heroSubtitle}
+  image={heroImage}
+  heroTitle={heroTitle}
+  heroSubtitle={heroSubtitle}
+  heroImage={heroImage}
+  heroLqip={heroLqip}
+  heroAspect={heroAspect}
+  heroVariant={heroVariant}
 >
-  {
-    page?.Content && page.Content.length > 0 && (
-      <section class="page-content-section">
-        <div class="container">
-          <BlocksContent content={page.Content} className="page-content" />
+  <main class="container">
+    {
+      page?.Content && page.Content.length > 0 && (
+        <section class="page-content-section">
+          <div class="container">
+            <BlocksContent content={page.Content} className="page-content" />
+          </div>
+        </section>
+      )
+    }
+
+    <section class="posts-list-section">
+      <div class="container">
+        <h2 class="text-2xl font-bold mt-8 mb-6" style="color: var(--text);">
+          Products
+        </h2>
+        <div class="grid md:grid-cols-2 gap-6">
+          {
+            productCards.map((p: any) => (
+              <a
+                href={productLinkFor(p)}
+                class="post-card p-4 rounded-lg flex gap-4 items-start"
+                aria-label={`View product ${p.data?.Title || p.id}`}
+              >
+                <div class="w-32 h-24 overflow-hidden rounded flex-shrink-0">
+                  <img
+                    src={imgFor(p)}
+                    alt={(p.data as any)?.SEO?.altText || p.data?.Title || ""}
+                    class="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div class="flex-1">
+                  <h3 class="font-semibold" style="color: var(--text);">
+                    {p.data?.Name}
+                  </h3>
+                  <p class="text-sm mt-1" style="color: var(--text-muted)">
+                    {(renderExcerpt(p) || "").slice(0, 160)}
+                    {(renderExcerpt(p) || "").length > 160 ? "…" : ""}
+                  </p>
+                </div>
+              </a>
+            ))
+          }
         </div>
-      </section>
-    )
-  }
+      </div>
+    </section>
+    {
+      page?.Content && page.Content.length > 0 && (
+        <section class="page-content-section">
+          <div class="container">
+            <BlocksContent content={page.Content} className="page-content" />
+          </div>
+        </section>
+      )
+    }
+  </main>
 </PageLayout>

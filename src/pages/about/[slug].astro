@@ -1,0 +1,134 @@
+---
+import { getCollection } from "astro:content";
+import PageLayout from "../../layouts/PageLayout.astro";
+import BlocksContent from "../../components/BlocksContent.astro";
+import { renderExcerpt, imgFor, pickRelated } from "../../lib/entry.utils";
+
+export async function getStaticPaths() {
+  const pages = await getCollection("pages");
+
+  // Filter pages that should appear under /about
+  const aboutPages = pages.filter((p) => {
+    const slug = p.data?.slug || p.id;
+    if (!slug) return false;
+    // skip the index/about home or obvious root pages
+    if (slug === "about" || slug === "home") return false;
+    const pd = p.data as any;
+    // skip pages that point to external URLs
+    if (pd?.ExternalUrl) return false;
+    // allow an explicit opt-out via ShowInAbout = false
+    if (pd?.ShowInAbout === false) return false;
+    // if a Section field exists, only include pages explicitly in the 'about' section
+    if (pd?.Section && String(pd?.Section).toLowerCase() !== "about") return false;
+    return true;
+  });
+
+  return aboutPages.map((p) => ({ params: { slug: p.data?.slug || p.id } }));
+}
+
+// Server-side frontmatter: load collections once
+const pages = await getCollection("pages");
+const storeData = await getCollection("store");
+const store = storeData[0]?.data || {};
+const storeCover = store?.Cover || "";
+
+const { slug } = Astro.params;
+const current = pages.find((p) => p.data?.slug === slug || p.id === slug);
+if (!current) throw new Error(`Page not found: ${slug}`);
+
+const seoTitle = current.data?.SEO?.metaTitle || current.data?.Title;
+const seoDescription = (current.data as any)?.SEO?.metaDescription || renderExcerpt(current);
+const seoImage =
+  (current.data as any)?.SEO?.socialImage?.formats?.large?.url ||
+  (current.data as any)?.SEO?.socialImage?.url ||
+  (current.data as any)?.cover?.url ||
+  storeCover ||
+  "";
+
+const heroLqip =
+  (current.data as any)?.SEO?.socialImage?.formats?.small?.url ||
+  (current.data as any)?.cover?.formats?.small?.url ||
+  "";
+const heroAspect = current.data?.SEO?.meta?.heroAspect || "4/5";
+const heroVariant = current.data?.SEO?.meta?.heroVariant || "spacious";
+
+const related = pickRelated(pages, current, 3);
+// normalize a displayable date (iso + readable)
+const rawDate = (current.data as any)?.Date || (current.data as any)?.publishedAt || (current.data as any)?.createdAt || null;
+const isoDate = rawDate ? new Date(rawDate).toISOString() : null;
+const prettyDate = rawDate
+  ? new Date(rawDate).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
+  : null;
+
+// compute a best-guess href for a page entry
+function hrefForPage(r: any) {
+  const slug = r.data?.slug || r.id;
+  const section = ((r.data as any)?.Section || "").toLowerCase();
+  const special: Record<string, string> = {
+    home: "/",
+    blog: "/blog",
+    newsletter: "/newsletter",
+  };
+  // explicit root aliases
+  if (slug === "about") return "/about";
+  if (slug === "products") return "/products";
+  if (special[slug]) return special[slug];
+  if (section === "products") return `/products/${slug}`;
+  if (section === "about" || !section) return `/about/${slug}`;
+  // fallback to root-level path
+  return `/${slug}`;
+}
+---
+
+<PageLayout
+  title={seoTitle}
+  description={seoDescription}
+  image={seoImage}
+  heroTitle={current.data?.Title}
+  heroSubtitle={(current.data as any)?.Excerpt || seoDescription}
+  heroImage={seoImage}
+  heroLqip={heroLqip}
+  heroAspect={heroAspect}
+  heroVariant={heroVariant}
+>
+  <main class="container">
+    <article class="prose mx-auto my-12">
+      <h1>{current.data?.Title}</h1>
+      { prettyDate && isoDate && (
+        <p class="text-sm text-muted">
+          <time datetime={isoDate}>{prettyDate}</time>
+        </p>
+      ) }
+      <BlocksContent content={current.data?.Content || []} />
+    </article>
+
+    { related && related.length > 0 && (
+      <section class="related container mt-12">
+        <h3 class="text-xl font-semibold mb-4" style="color: var(--text);">Related pages</h3>
+        <div class="grid md:grid-cols-3 gap-6">
+          {related.map((r: any) => (
+            <a
+              href={hrefForPage(r)}
+              class="rounded-lg shadow-sm p-3 flex gap-3 items-start hover:shadow-md transition bg-surface"
+              aria-label={`Read more about ${r.data?.Title || r.id}`}
+            >
+              <div class="w-28 h-20 overflow-hidden rounded flex-shrink-0">
+                <img
+                  src={imgFor(r)}
+                  alt={(r.data as any)?.SEO?.altText || r.data?.Title || `About: ${r.data?.slug || r.id}`}
+                  class="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+              <div class="flex-1">
+                <h4 class="font-semibold text-lg" style="color: var(--text);">{r.data?.Title}</h4>
+                <p class="text-sm mt-1" style="color: var(--text-muted)">{(renderExcerpt(r) || "").slice(0, 120)}{(renderExcerpt(r) || "").length > 120 ? "\u2026" : ""}</p>
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+    ) }
+
+  </main>
+</PageLayout>

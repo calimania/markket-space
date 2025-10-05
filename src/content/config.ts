@@ -28,7 +28,7 @@ function strapiLoader(query: StrapiQueryOptions) {
     name: `strapi-${query.contentType}`,
     schema: async () => await fetchStrapiSchema(query.contentType, config.api_url),
 
-    async load({ store, logger, meta }) {
+    async load({ store, logger, meta }: { store: any; logger: any; meta: any }) {
       const lastSynced = meta.get("lastSynced");
       if (lastSynced && Date.now() - Number(lastSynced) < config.sync_interval) {
         logger.info("Skipping sync");
@@ -47,7 +47,7 @@ function strapiLoader(query: StrapiQueryOptions) {
 const pages = defineCollection({
   loader: strapiLoader({
     contentType: "page",
-    sort: 'slug:DESC',
+    sort: 'slug:ASC',
     filter: `filters[store][slug][$eq]=${config.store_slug}`,
     populate: 'SEO.socialImage,albums,albums.tracks,albums.cover'
   }) as Loader,

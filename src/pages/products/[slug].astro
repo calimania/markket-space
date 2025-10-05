@@ -1,0 +1,255 @@
+---
+import { getCollection } from "astro:content";
+import PageLayout from "../../layouts/PageLayout.astro";
+import BlocksContent from "../../components/BlocksContent.astro";
+import CheckoutModal from "../../components/checkoutModal.tsx";
+import { marked } from "marked";
+import { renderExcerpt, imgFor, pickRelated } from "../../lib/entry.utils";
+// ProductSlideshow will be initialized client-side below
+
+export async function getStaticPaths() {
+  const products = await getCollection("products");
+  return products.map((p) => ({ params: { slug: p.data?.slug || p.id } }));
+}
+
+const products = await getCollection("products");
+const storeData = await getCollection("store");
+const store = storeData[0]?.data || {};
+const storeCover = store?.Cover || "";
+
+const { slug } = Astro.params;
+const product = products.find((p) => p.data?.slug === slug || p.id === slug);
+if (!product) throw new Error(`Product not found: ${slug}`);
+
+const seoTitle =
+  (product.data as any)?.SEO?.metaTitle || (product.data as any)?.Name || "";
+const seoDescription =
+  (product.data as any)?.SEO?.metaDescription || renderExcerpt(product);
+const seoImage =
+  (product.data as any)?.SEO?.socialImage?.formats?.large?.url ||
+  (product.data as any)?.SEO?.socialImage?.url ||
+  (product.data as any)?.Thumbnail?.url ||
+  storeCover ||
+  "";
+
+const heroLqip =
+  (product.data as any)?.SEO?.socialImage?.formats?.small?.url ||
+  (product.data as any)?.Thumbnail?.formats?.small?.url ||
+  "";
+const heroAspect = (product.data as any)?.SEO?.meta?.heroAspect || "4/5";
+const heroVariant = (product.data as any)?.SEO?.meta?.heroVariant || "spacious";
+
+const related = pickRelated(products, product, 3);
+
+// pretty date
+const rawDate =
+  (product.data as any)?.Date ||
+  (product.data as any)?.publishedAt ||
+  (product.data as any)?.createdAt ||
+  null;
+const isoDate = rawDate ? new Date(rawDate).toISOString() : null;
+const prettyDate = rawDate
+  ? new Date(rawDate).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    })
+  : null;
+
+function productLinkFor(p: any) {
+  const pd = p.data as any;
+  if (pd?.ExternalUrl) return pd.ExternalUrl;
+  const s = pd?.slug || p.id;
+  return `/products/${s}`;
+}
+
+// safe product payload for client (serialize/deserialize to avoid circulars)
+const productForClient = JSON.parse(JSON.stringify(product));
+const productJson = encodeURIComponent(JSON.stringify(productForClient));
+const seoImageEncoded = encodeURIComponent(seoImage || "");
+
+// derive prices: support multiple CMS shapes
+const rawPrices =
+  (product.data as any)?.PRICES || (product.data as any)?.Prices || [];
+const prices: any[] = [];
+if (Array.isArray(rawPrices) && rawPrices.length > 0) {
+  rawPrices.forEach((p: any) => {
+    prices.push({
+      STRIPE_ID: p?.STRIPE_ID || p?.stripe_id || p?.id,
+      Price: p?.Price || p?.price || p?.unit_amount || p?.amount,
+      Name: p?.Name || p?.name || p?.label || "",
+      Currency: p?.Currency || p?.currency || "usd",
+    });
+  });
+} else if ((product.data as any)?.usd_price) {
+  prices.push({
+    STRIPE_ID: null,
+    Price: (product.data as any).usd_price,
+    Name: "Standard",
+    Currency: "usd",
+  });
+} else if ((product.data as any)?.Price) {
+  prices.push({
+    STRIPE_ID: null,
+    Price: (product.data as any).Price,
+    Name: "Standard",
+    Currency: "usd",
+  });
+}
+
+// gather slideshow images from common fields (Slides, Gallery, Thumbnail, SEO images)
+const rawSlides =
+  (product.data as any)?.Slides ||
+  (product.data as any)?.slides ||
+  (product.data as any)?.Gallery ||
+  (product.data as any)?.images ||
+  [];
+const slides: any[] = [];
+if (Array.isArray(rawSlides) && rawSlides.length > 0) {
+  rawSlides.forEach((s: any) => {
+    const url = s?.url || s?.formats?.large?.url || s?.formats?.small?.url;
+    if (url)
+      slides.push({
+        url,
+        alt: s?.alternativeText || s?.alt || (product.data as any)?.Name || "",
+      });
+  });
+}
+// fallback to Thumbnail or SEO image
+if (slides.length === 0) {
+  const thumb =
+    (product.data as any)?.Thumbnail ||
+    (product.data as any)?.SEO?.socialImage ||
+    null;
+  const url =
+    thumb?.url ||
+    thumb?.formats?.large?.url ||
+    thumb?.formats?.small?.url ||
+    seoImage ||
+    null;
+  if (url) slides.push({ url, alt: (product.data as any)?.Name || "" });
+}
+---
+
+<PageLayout
+  title={seoTitle}
+  description={seoDescription}
+  image={seoImage}
+  heroTitle={(product.data as any)?.Name || ""}
+  heroSubtitle={product.data?.SEO?.metaDescription}
+  heroImage={seoImage}
+  heroLqip={heroLqip}
+  heroAspect={heroAspect}
+  heroVariant={heroVariant}
+>
+  <main class="container">
+    <article class="prose mx-auto my-12">
+      <h2>Product details</h2>
+
+      {
+        prettyDate && isoDate && (
+          <p class="text-sm text-muted">
+            <time datetime={isoDate}>{prettyDate}</time>
+          </p>
+        )
+      }
+      {
+        (product.data as any)?.Content ? (
+          <BlocksContent content={(product.data as any)?.Content} />
+        ) : (
+          <div
+            class="prose"
+            set:html={marked((product.data as any)?.Description || "")}
+          />
+        )
+      }
+    </article>
+
+    <section>
+      <div class="mt-4 flex items-center gap-3">
+        <CheckoutModal
+          prices={product.data.PRICES}
+          product={product}
+          store={store}
+          client:idle
+        />
+      </div>
+    </section>
+
+    <section class="mt-8">
+      <div class="grid md:grid-cols-4 gap-6 items-start">
+        <div class="md:col-span-3">
+          <div class="rounded-lg overflow-hidden">
+            <img
+              src={slides[0]?.url || "" || seoImage}
+              alt={slides[0]?.alt || ""}
+              class="w-full h-96 object-cover hero-image"
+            />
+          </div>
+        </div>
+        <div class="col-span-1 hidden md:block">
+          <div class="flex flex-col gap-3">
+            {
+              slides.map((s: any, i: number) => (
+                <button
+                  data-astro-image-url={s.url}
+                  data-astro-image-alt={s.alt}
+                  class="w-full h-20 overflow-hidden rounded"
+                  aria-pressed="false"
+                  tabindex="0"
+                >
+                  <img
+                    src={s.url}
+                    alt={s.alt}
+                    class="w-full h-full object-cover"
+                  />
+                </button>
+              ))
+            }
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {
+      related && related.length > 0 && (
+        <section class="related container mt-12">
+          <h3 class="text-xl font-semibold mb-4" style="color: var(--text);">
+            Related products
+          </h3>
+          <div class="grid md:grid-cols-2 gap-6">
+            {related.map((r: any) => (
+              <a
+                href={productLinkFor(r)}
+                class="rounded-lg shadow-sm p-3 flex gap-3 items-start hover:shadow-md transition bg-surface"
+                aria-label={`View product ${(r.data as any)?.Name || r.id}`}
+              >
+                <div class="w-28 h-20 overflow-hidden rounded flex-shrink-0">
+                  <img
+                    src={imgFor(r)}
+                    alt={
+                      (r.data as any)?.SEO?.altText ||
+                      (r.data as any)?.Name ||
+                      `Product: ${r.data?.slug || r.id}`
+                    }
+                    class="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div class="flex-1">
+                  <h4 class="font-semibold text-lg" style="color: var(--text);">
+                    {(r.data as any)?.Name}
+                  </h4>
+                  <p class="text-sm mt-1" style="color: var(--text-muted)">
+                    {(renderExcerpt(r) || "").slice(0, 120)}
+                    {(renderExcerpt(r) || "").length > 120 ? "\u2026" : ""}
+                  </p>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )
+    }
+  </main>
+</PageLayout>
