@@ -2,6 +2,7 @@
 import { getCollection } from "astro:content";
 import PageLayout from "../../layouts/PageLayout.astro";
 import BlocksContent from "../../components/BlocksContent.astro";
+import { renderExcerpt, imgFor } from "../../lib/entry.utils";
 
 const pages = await getCollection("pages");
 const page = pages.find((p) => p.data.slug == "about")?.data;
@@ -9,6 +10,29 @@ const page = pages.find((p) => p.data.slug == "about")?.data;
 const storeData = await getCollection("store");
 const store = storeData[0]?.data || {};
 const storeCover = store.Cover;
+// Pages listing for About index (server-side)
+const allPages = await getCollection("pages");
+// exclude the about page itself and any that opt-out via ShowInAbout === false
+const pageCards = allPages
+  .filter((p) => p.data?.slug !== "about")
+  .filter((p) => (p.data as any)?.ShowInAbout !== false)
+  .slice(0, 8);
+
+function pageLinkFor(p: any) {
+  // Prefer an explicit link field if present
+  if ((p.data as any)?.ExternalUrl) return (p.data as any).ExternalUrl;
+  const slug = p.data?.slug;
+  // Known direct routes
+  const map: Record<string, string> = {
+    home: "/",
+    blog: "/blog",
+    newsletter: "/newsletter",
+    products: "/products",
+  };
+  if (slug && map[slug]) return map[slug];
+  if (slug) return `/about/${slug}`;
+  return `/about/${p.id}`;
+}
 ---
 
 <PageLayout
@@ -32,6 +56,44 @@ const storeCover = store.Cover;
       <section class="page-content-section">
         <div class="container">
           <BlocksContent content={page.Content} className="page-content" />
+        </div>
+      </section>
+    )
+  }
+  {/* Pages grid */}
+  {
+    pageCards && pageCards.length > 0 && (
+      <section class="posts-list-section">
+        <div class="container">
+          <h2 class="text-2xl font-bold mt-8 mb-6" style="color: var(--text);">
+            Explore
+          </h2>
+          <div class="grid md:grid-cols-3 gap-6">
+            {pageCards.map((p: any) => (
+              <a
+                href={pageLinkFor(p)}
+                class="post-card p-4 rounded-lg flex gap-4 items-start"
+              >
+                <div class="w-28 h-20 overflow-hidden rounded flex-shrink-0">
+                  <img
+                    src={imgFor(p)}
+                    alt={p.data?.Title || ""}
+                    class="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div class="flex-1">
+                  <h3 class="font-semibold" style="color: var(--text);">
+                    {p.data?.Title}
+                  </h3>
+                  <p class="text-sm mt-1" style="color: var(--text-muted)">
+                    {(renderExcerpt(p) || "").slice(0, 160)}
+                    {(renderExcerpt(p) || "").length > 160 ? "…" : ""}
+                  </p>
+                </div>
+              </a>
+            ))}
+          </div>
         </div>
       </section>
     )
