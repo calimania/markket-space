@@ -1,0 +1,105 @@
+---
+import { getCollection } from "astro:content";
+import PageLayout from "../../layouts/PageLayout.astro";
+import BlocksContent from "../../components/BlocksContent.astro";
+import { renderExcerpt, imgFor, pickRelated } from "../../lib/entry.utils";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("posts");
+  return posts.map((p) => ({ params: { slug: p.data?.slug || p.id } }));
+}
+
+// Server-side frontmatter: load collections once
+const posts = await getCollection("posts");
+const pages = await getCollection("pages");
+const page = pages.find((p) => p.data.slug === "blog")?.data;
+const storeData = await getCollection("store");
+const store = storeData[0]?.data || {};
+const storeCover = store?.Cover || "";
+
+const { slug } = Astro.params;
+const post = posts.find((p) => p.data?.slug === slug || p.id === slug);
+if (!post) throw new Error(`Post not found: ${slug}`);
+
+const seoTitle = post.data?.SEO?.metaTitle || post.data?.Title;
+const seoDescription =
+  (post.data as any)?.SEO?.metaDescription || renderExcerpt(post);
+const seoImage =
+  post.data?.SEO?.socialImage?.formats?.large?.url ||
+  post.data?.SEO?.socialImage?.url ||
+  post.data?.cover?.url ||
+  storeCover ||
+  "";
+
+const heroLqip =
+  (post.data as any)?.SEO?.socialImage?.formats?.small?.url ||
+  (post.data as any)?.cover?.formats?.small?.url ||
+  "";
+const heroAspect =
+  post.data?.SEO?.meta?.heroAspect || page?.SEO?.meta?.heroAspect || "4/5";
+const heroVariant =
+  post.data?.SEO?.meta?.heroVariant ||
+  page?.SEO?.meta?.heroVariant ||
+  "spacious";
+
+const related = pickRelated(posts, post, 3);
+---
+
+<PageLayout
+  title={seoTitle}
+  description={seoDescription}
+  image={seoImage}
+  heroTitle={post.data?.Title}
+  heroSubtitle={(post.data as any)?.Excerpt || seoDescription}
+  heroImage={seoImage}
+  heroLqip={heroLqip}
+  heroAspect={heroAspect}
+  heroVariant={heroVariant}
+>
+  <main class="container">
+    <article class="prose mx-auto my-12">
+      <h1>{post.data?.Title}</h1>
+      {
+        (post.data as any)?.Date && (
+          <p class="text-sm text-muted">{(post.data as any).Date}</p>
+        )
+      }
+      <BlocksContent content={post.data?.Content || []} />
+    </article>
+    {
+      related && related.length > 0 && (
+        <section class="related container mt-12">
+          <h3 class="text-xl font-semibold mb-4" style="color: var(--text);">
+            Related articles
+          </h3>
+          <div class="grid md:grid-cols-3 gap-6">
+            {related.map((r: any) => (
+              <a
+                href={`/blog/${r.data?.slug || r.id}`}
+                class="rounded-lg shadow-sm p-3 flex gap-3 items-start hover:shadow-md transition bg-surface"
+              >
+                <div class="w-28 h-20 overflow-hidden rounded flex-shrink-0">
+                  <img
+                    src={imgFor(r)}
+                    alt={r.data?.Title || ""}
+                    class="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div class="flex-1">
+                  <h4 class="font-semibold text-lg" style="color: var(--text);">
+                    {r.data?.Title}
+                  </h4>
+                  <p class="text-sm mt-1" style="color: var(--text-muted)">
+                    {(renderExcerpt(r) || "").slice(0, 120)}
+                    {(renderExcerpt(r) || "").length > 120 ? "…" : ""}
+                  </p>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )
+    }
+  </main>
+</PageLayout>

@@ -2,41 +2,12 @@
 import { getCollection } from "astro:content";
 import PageLayout from "../../layouts/PageLayout.astro";
 import BlocksContent from "../../components/BlocksContent.astro";
+import { renderExcerpt, imgFor } from "../../lib/entry.utils";
 
 const pages = await getCollection("pages");
 const page = pages.find((p) => p.data.slug == "blog")?.data;
 
 const articles = await getCollection("posts");
-
-function renderExcerpt(a: any) {
-  const meta = a.data?.SEO || {};
-  let excerpt = "";
-  const blocks = a.data?.Content || [];
-  for (const b of blocks) {
-    if (b?.type === "paragraph" && Array.isArray(b.children)) {
-      const t = b.children
-        .map((c: any) => c?.text || "")
-        .join(" ")
-        .trim();
-      if (t) {
-        excerpt = t;
-        break;
-      }
-    }
-  }
-  return excerpt || meta?.metaDescription || "";
-}
-
-function imgFor(a: any) {
-  const meta = a.data?.SEO || {};
-  return (
-    meta?.socialImage?.formats?.large?.url ||
-    meta?.socialImage?.formats?.small?.url ||
-    meta?.socialImage?.url ||
-    a.data?.cover?.url ||
-    ""
-  );
-}
 
 const featured = articles?.[0] ?? null;
 const secondary = articles?.[1] ?? null;
