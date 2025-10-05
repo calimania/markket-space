@@ -214,13 +214,13 @@ const { content, className = "" } = Astro.props;
                 .filter((child) => child.type === "list-item")
                 .map((child) => (
                   <li class="leading-relaxed">
-                    {child.children?.map((grandChild) => (
+                    {child.children?.map((grandChild: any) => (
                       <Fragment>
                         {grandChild.type === "link" ? (
                           <a
                             href={grandChild.url}
                             target={
-                              grandChild.url?.startsWith("/")
+                              (grandChild.url || "").startsWith("/")
                                 ? "_self"
                                 : "_blank"
                             }
@@ -273,16 +273,24 @@ const { content, className = "" } = Astro.props;
               <div class="rounded-lg overflow-hidden shadow-lg">
                 <img
                   src={block.image.url}
-                  alt={block.image.alternativeText || ""}
+                  alt={
+                    (block.image as any).alternativeText ||
+                    (block.image as any).name ||
+                    ""
+                  }
                   class="w-full h-auto object-cover"
                   width={block.image.width}
                   height={block.image.height}
                   loading="lazy"
                 />
               </div>
-              {(block.image.caption || block.image.alternativeText) && (
+              {((block.image as any).caption ||
+                (block.image as any).alternativeText ||
+                (block.image as any).name) && (
                 <figcaption class="text-center text-sm text-gray-500 mt-3 italic">
-                  {block.image.caption || block.image.alternativeText}
+                  {(block.image as any).caption ||
+                    (block.image as any).alternativeText ||
+                    (block.image as any).name}
                 </figcaption>
               )}
             </figure>
