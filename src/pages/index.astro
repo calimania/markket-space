@@ -8,8 +8,7 @@ import {
   IconUsers,
   IconDeviceMobile,
   IconCode,
-} from "@tabler/icons-react";
-import {
+  IconKey,
   IconPhoto,
   IconBook,
   IconMusic,
@@ -17,41 +16,55 @@ import {
   IconCamera,
   IconMask,
   IconArrowRight,
-  IconKey,
 } from "@tabler/icons-react";
 
+// Fetch collections safely
 const pages = await getCollection("pages");
-const homePage = pages.find((p) => p.data.slug == "home")?.data;
+const homePage = pages.find((p) => p.data.slug === "home")?.data;
 
-// Get store data for dynamic content
 const storeData = await getCollection("store");
 const store = storeData[0]?.data || {};
+
+// Fallback configuration handling
 const storeName = store.title || "Markkët Space";
 const storeUrls = store.URLS || {};
 const storeUrl =
   storeUrls.site || "https://de.markket.place/store/next/showcase";
 const storeCover = store.Cover;
+
+// Helper to determine optimal images cleanly
+function imageOrFallback(
+  ...candidates: Array<string | undefined | null>
+): string | undefined {
+  return candidates.find(
+    (item): item is string => typeof item === "string" && item.length > 0,
+  );
+}
+
+const seoImage = imageOrFallback(
+  homePage?.SEO?.socialImage?.formats?.large?.url,
+  homePage?.SEO?.socialImage?.url,
+  storeCover?.formats?.large?.url,
+  storeCover?.url,
+);
 ---
 
 <LandingLayout
-  title={homePage?.SEO?.metaTitle || store.SEO?.metaTitle}
-  description={homePage?.SEO?.metaDescription || store.SEO?.metaDescription}
-  image={homePage?.SEO?.socialImage?.formats?.large?.url ||
-    homePage?.SEO?.socialImage?.url ||
-    storeCover?.url}
+  title={homePage?.SEO?.metaTitle || store.SEO?.metaTitle || storeName}
+  description={homePage?.SEO?.metaDescription ||
+    store.SEO?.metaDescription ||
+    `Welcome to ${storeName}`}
+  image={seoImage}
   heroCtaText="Browse Templates"
   heroCtaUrl={storeUrl}
-  heroTitle={homePage?.Title}
+  heroTitle={homePage?.Title || `Welcome to ${storeName}`}
 >
   <!-- Features Section -->
   <section class="features-section">
     <div class="container">
       <div class="section-header">
-        <h2>Everything you need to succeed</h2>
         <p>
-          Professional tools designed specifically for creators. From digital
-          artists to course creators, we've built the platform that understands
-          your unique needs.
+          Easy dashboard to manage your sites <br />
         </p>
       </div>
       <div class="features-grid">
@@ -59,54 +72,22 @@ const storeCover = store.Cover;
           <div class="feature-icon">
             <IconPalette size={32} client:load />
           </div>
-          <h3>Creator-Focused Templates</h3>
-          <p>
-            Beautiful, customizable designs built specifically for artists,
-            designers, and content creators
-          </p>
+          <h3>Easy to Write</h3>
+          <p>Launch sites for all your ideas</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">
             <IconCoin size={32} client:load />
           </div>
-          <h3>Zero Startup Costs</h3>
-          <p>
-            Start selling immediately with no upfront fees. Only pay when you
-            make sales.
-          </p>
+          <h3>Easy to Share</h3>
+          <p>Simple URL for your socials and flyers</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">
             <IconUsers size={32} client:load />
           </div>
-          <h3>Growing Community</h3>
-          <p>
-            Join a supportive community of creators helping each other succeed
-          </p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <IconKey size={32} client:load />
-          </div>
-          <h3>Secure Authentication</h3>
-          <p>Magic link login - no passwords needed, just your email</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <IconDeviceMobile size={32} client:load />
-          </div>
-          <h3>Mobile Optimized</h3>
-          <p>Manage your store on the go with our mobile-friendly dashboard</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <IconCode size={32} client:load />
-          </div>
-          <h3>Flexible Content</h3>
-          <p>
-            Create blogs, product pages, collections, and custom content with
-            ease
-          </p>
+          <h3>Easy Payouts</h3>
+          <p>Stripe Connect or your existing store</p>
         </div>
       </div>
     </div>
@@ -116,7 +97,7 @@ const storeCover = store.Cover;
   <section class="social-proof-section">
     <div class="container">
       <div class="social-proof-content">
-        <h3>Perfect for every type of creator</h3>
+        <h3>Discover</h3>
         <div class="creator-types">
           <div class="creator-type">
             <div class="creator-icon">
@@ -146,39 +127,34 @@ const storeCover = store.Cover;
             <div class="creator-icon">
               <IconCamera size={24} client:load />
             </div>
-            <span>Photographers</span>
-          </div>
-          <div class="creator-type">
-            <div class="creator-icon">
-              <IconMask size={24} client:load />
-            </div>
-            <span>Performers</span>
+            <span>Crafters</span>
           </div>
         </div>
         <div class="social-proof-cta">
-          <p>
-            Join hundreds of creators already building their online presence
-          </p>
-          <a
-            href="https://de.markket.place/auth/magic"
-            class="cta-primary"
-            target="_blank"
-          >
-            Start Your Store Free <IconArrowRight size={20} client:load />
-          </a>
-          {
-            storeUrl &&
-              storeUrl !== "https://de.markket.place/store/next/showcase" && (
-                <a
-                  href={storeUrl}
-                  class="cta-secondary"
-                  target="_blank"
-                  style="margin-left: 1rem;"
-                >
-                  Visit {storeName} <IconArrowRight size={20} client:load />
-                </a>
-              )
-          }
+          <p>Join dozens of us</p>
+          <div class="cta-group">
+            <a
+              href="https://markket.place/blog"
+              class="cta-primary"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Discovery Blog <IconArrowRight size={20} client:load />
+            </a>
+            {
+              storeUrl &&
+                storeUrl !== "https://de.markket.place/store/next/showcase" && (
+                  <a
+                    href={storeUrl}
+                    class="cta-secondary"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Visit {storeName} <IconArrowRight size={20} client:load />
+                  </a>
+                )
+            }
+          </div>
         </div>
       </div>
     </div>
@@ -417,11 +393,24 @@ const storeCover = store.Cover;
     margin-bottom: 1.5rem;
   }
 
-  .social-proof-cta .cta-primary,
-  .social-proof-cta .cta-secondary {
+  .cta-group {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .cta-primary,
+  .cta-secondary {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius);
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
   }
 
   /* Page Content Section */
@@ -496,8 +485,14 @@ const storeCover = store.Cover;
       padding: 2rem;
     }
 
-    .social-proof-cta .cta-primary,
-    .social-proof-cta .cta-secondary {
+    .cta-group {
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .cta-primary,
+    .cta-secondary {
+      width: 100%;
       justify-content: center;
     }
   }

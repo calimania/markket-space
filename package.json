@@ -1,7 +1,7 @@
 {
   "name": "markket-sell",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.5.2",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
@@ -9,11 +9,11 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/react": "^4.4.0",
-    "@astrojs/sitemap": "^3.6.0",
+    "@astrojs/react": "^6.0.1",
+    "@astrojs/sitemap": "^3.7.3",
     "@tabler/icons-react": "^3.35.0",
     "@tailwindcss/vite": "^4.1.13",
-    "astro": "^5.13.9",
+    "astro": "^7.1.1",
     "cafecito": "^0.12.2",
     "marked": "^16.3.0",
     "react": "^19.1.1",

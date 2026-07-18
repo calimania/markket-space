@@ -3,26 +3,42 @@ import { getCollection } from "astro:content";
 import PageLayout from "../../layouts/PageLayout.astro";
 import BlocksContent from "../../components/BlocksContent.astro";
 import { renderExcerpt, imgFor } from "../../lib/entry.utils";
+import { IconArrowUpRight, IconCompass } from "@tabler/icons-react";
 
+// Fetch pages and isolate the master about configuration safely
 const pages = await getCollection("pages");
-const page = pages.find((p) => p.data.slug == "about")?.data;
+const page = pages.find((p) => p.data.slug === "about")?.data;
 
 const storeData = await getCollection("store");
 const store = storeData[0]?.data || {};
 const storeCover = store.Cover;
-// Pages listing for About index (server-side)
+
+// Filter, exclude, and slice collection elements safely
 const allPages = await getCollection("pages");
-// exclude the about page itself and any that opt-out via ShowInAbout === false
 const pageCards = allPages
   .filter((p) => !["about", "receipt", "product"].includes(p.data.slug))
   .filter((p) => (p.data as any)?.ShowInAbout !== false)
   .slice(0, 8);
 
+// Fallback image processor matching our global standards
+function imageOrFallback(
+  ...candidates: Array<string | undefined | null>
+): string | undefined {
+  return candidates.find(
+    (item): item is string => typeof item === "string" && item.length > 0,
+  );
+}
+
+const seoImage = imageOrFallback(
+  page?.SEO?.socialImage?.formats?.large?.url,
+  page?.SEO?.socialImage?.url,
+  storeCover?.formats?.large?.url,
+  storeCover?.url,
+);
+
 function pageLinkFor(p: any) {
-  // Prefer an explicit link field if present
   if ((p.data as any)?.ExternalUrl) return (p.data as any).ExternalUrl;
   const slug = p.data?.slug;
-  // Known direct routes
   const map: Record<string, string> = {
     home: "/",
     blog: "/blog",
@@ -36,12 +52,10 @@ function pageLinkFor(p: any) {
 ---
 
 <PageLayout
-  title={page?.SEO?.metaTitle || store.SEO?.metaTitle}
+  title={page?.SEO?.metaTitle || store.SEO?.metaTitle || "About Us"}
   description={page?.SEO?.metaDescription || store.SEO?.metaDescription}
-  image={page?.SEO?.socialImage?.formats?.large?.url ||
-    page?.SEO?.socialImage?.url ||
-    storeCover?.url}
-  heroTitle={page?.Title || "About Markkët Space"}
+  image={seoImage}
+  heroTitle={page?.Title || `About ${store.title || "Our Space"}`}
   heroSubtitle={page?.SEO?.metaDescription ||
     "We're building the future of creator commerce - a platform that puts artists, designers, and content creators first."}
   heroImage={page?.SEO?.socialImage?.url || storeCover?.url}
@@ -51,6 +65,7 @@ function pageLinkFor(p: any) {
   heroCtaText="Start Your Store Free"
   heroCtaUrl="https://de.markket.place/auth/magic"
 >
+  <!-- Main Rich Text Content From Strapi -->
   {
     page?.Content && page.Content.length > 0 && (
       <section class="page-content-section">
@@ -60,42 +75,230 @@ function pageLinkFor(p: any) {
       </section>
     )
   }
-  {/* Pages grid */}
+
+  <!-- Modern Dynamic Navigation Cards Grid -->
   {
     pageCards && pageCards.length > 0 && (
-      <section class="posts-list-section">
+      <section class="explore-list-section">
         <div class="container">
-          <h2 class="text-2xl font-bold mt-8 mb-6" style="color: var(--text);">
-            Explore
-          </h2>
-          <div class="grid md:grid-cols-3 gap-6">
-            {pageCards.map((p: any) => (
-              <a
-                href={pageLinkFor(p)}
-                class="post-card p-4 rounded-lg flex gap-4 items-start"
-              >
-                <div class="w-28 h-20 overflow-hidden rounded flex-shrink-0">
-                  <img
-                    src={imgFor(p)}
-                    alt={p.data?.Title || ""}
-                    class="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
-                <div class="flex-1">
-                  <h3 class="font-semibold" style="color: var(--text);">
-                    {p.data?.Title}
-                  </h3>
-                  <p class="text-sm mt-1" style="color: var(--text-muted)">
-                    {(renderExcerpt(p) || "").slice(0, 160)}
-                    {(renderExcerpt(p) || "").length > 160 ? "…" : ""}
-                  </p>
-                </div>
-              </a>
-            ))}
+          <div class="explore-header">
+            <div class="explore-title-wrapper">
+              <IconCompass class="explore-icon" size={24} />
+              <h2>Explore Our Space</h2>
+            </div>
+            <p>
+              Discover more resources, updates, and custom hubs built for our
+              creative ecosystem.
+            </p>
+          </div>
+
+          <div class="explore-grid">
+            {pageCards.map((p: any) => {
+              const excerpt = renderExcerpt(p) || "";
+              const isExternal = !!(p.data as any)?.ExternalUrl;
+
+              return (
+                <a
+                  href={pageLinkFor(p)}
+                  class="explore-card"
+                  target={isExternal ? "_blank" : undefined}
+                  rel={isExternal ? "noopener noreferrer" : undefined}
+                >
+                  <div class="image-wrapper">
+                    <img
+                      src={imgFor(p)}
+                      alt={p.data?.Title || "Explore page template"}
+                      class="card-img"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div class="card-body">
+                    <div class="card-title-line">
+                      <h3>{p.data?.Title}</h3>
+                      <IconArrowUpRight class="arrow-icon" size={18} />
+                    </div>
+                    <p class="card-excerpt">
+                      {excerpt.slice(0, 110)}
+                      {excerpt.length > 110 ? "…" : ""}
+                    </p>
+                  </div>
+                </a>
+              );
+            })}
           </div>
         </div>
       </section>
     )
   }
 </PageLayout>
+
+<style>
+  /* Page Content Container Customizations */
+  .page-content-section {
+    padding: 4rem 0 2rem;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  /* Explore Section Layout Headers */
+  .explore-list-section {
+    padding: 5rem 0 8rem;
+    position: relative;
+  }
+
+  .explore-header {
+    margin-bottom: 3rem;
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 1.5rem;
+  }
+
+  .explore-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .explore-icon {
+    color: var(--primary);
+  }
+
+  .explore-header h2 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.025em;
+  }
+
+  .explore-header p {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+  }
+
+  /* Exquisite Grid System */
+  .explore-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+  }
+
+  /* Interactive Cards Style */
+  .explore-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg, 12px);
+    overflow: hidden;
+    text-decoration: none;
+    transition:
+      transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+      border-color 0.25s ease;
+    box-shadow: var(--shadow, 0 2px 8px rgba(0, 0, 0, 0.04));
+  }
+
+  .explore-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary);
+    box-shadow: var(--shadow-lg, 0 12px 24px rgba(0, 0, 0, 0.08));
+  }
+
+  /* Image Ratio Isolation */
+  .image-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: var(--bg-alt);
+  }
+
+  .card-img {
+    width: 100%;
+    height: 100%;
+    object-cover: cover;
+    object-position: center;
+    transition: transform 0.4s ease;
+  }
+
+  .explore-card:hover .card-img {
+    transform: scale(1.04);
+  }
+
+  /* Card Content Processing */
+  .card-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+  }
+
+  .card-title-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .card-body h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.35;
+    margin: 0;
+    transition: color 0.2s ease;
+  }
+
+  .explore-card:hover .card-body h3 {
+    color: var(--primary);
+  }
+
+  .arrow-icon {
+    color: var(--text-muted);
+    opacity: 0.5;
+    transform: translate(0, 2px);
+    transition:
+      transform 0.2s ease,
+      opacity 0.2s ease,
+      color 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .explore-card:hover .arrow-icon {
+    opacity: 1;
+    color: var(--primary);
+    transform: translate(2px, -2px);
+  }
+
+  .card-excerpt {
+    font-size: 0.925rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Fluid Responsive Adjustments */
+  @media (max-width: 640px) {
+    .explore-list-section {
+      padding: 3rem 0 5rem;
+    }
+
+    .explore-grid {
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+    }
+
+    .explore-header {
+      margin-bottom: 2rem;
+    }
+  }
+</style>

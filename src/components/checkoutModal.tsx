@@ -2,11 +2,30 @@ import { type FC, useEffect, useState } from "react";
 import { createPaymentLink } from "../scripts/ui.product";
 
 // Loose types: CMS shapes vary between projects
-type AnyPrice = any;
+export type Price = {
+  Price: number;
+  Name: string;
+  STRIPE_ID: string;
+  Description: string;
+  Currency: string;
+  hidden: Boolean;
+  extra: {};
+  ships_to: string[];
+  extensions: {};
+};
+
+type OptionPrice = {
+  unit_amount?: string;
+  quantity?: number;
+  price?: string;
+  currency: string;
+  product?: string;
+};
+
 type AnyOptions = any;
 
 interface Props {
-  prices: AnyPrice[];
+  prices: Price[];
   product: any;
   store: any;
   hideTrigger?: boolean;
@@ -18,30 +37,32 @@ const CheckoutModal: FC<Props> = ({ prices, product, store, hideTrigger = false 
   const [quantity, setQuantity] = useState(1);
   const [tip, setTip] = useState(0);
   const [total, setTotal] = useState(0);
-  const [selectedPrice, setSelectedPrice] = useState({} as AnyPrice);
+  const [selectedPrice, setSelectedPrice] = useState({} as Price);
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
   const [options, setOptions] = useState({
     totalPrice: 0,
-    product: product?.id || product?.SKU || product?.slug || product?.Name,
+    product: product?.data?.documentId,
     prices: [],
     stripe_test: !!(product?.Name || product?.Title || "").match(/test/i),
     includes_shipping: !/(digital)/i.test(product?.Name || product?.Title || ""),
     store_id: store?.data?.documentId || store?.documentId || store?.id || store?.slug,
-  } as AnyOptions);
+    unit_amount: '0',
+    quantity: 0,
+  });
 
   useEffect(() => {
-    const price = prices.find((p: any) => p.STRIPE_ID === selectedPriceId) as AnyPrice;
-    const basePrice = parseInt(String(price?.Price || price?.price || '0'), 10);
+    const price = prices.find((p: any) => p.STRIPE_ID === selectedPriceId) as Price;
+    const basePrice = parseInt(String(price?.Price || '0'), 10);
     const subtotal = basePrice * quantity;
     const newTotal = subtotal + tip;
 
-    const option_prices: AnyPrice[] = [
+    const option_prices: OptionPrice[] = [
       {
         quantity,
         price: selectedPriceId,
-        currency: (price?.Currency || price?.currency || 'usd'),
+        currency: (price?.Currency || 'usd'),
       },
     ];
 
@@ -49,7 +70,7 @@ const CheckoutModal: FC<Props> = ({ prices, product, store, hideTrigger = false 
       option_prices.push({
         unit_amount: String(tip),
         currency: 'usd',
-        product: product?.SKU || product?.slug || product?.Name,
+        product: product?.data?.documentId,
       });
     }
 
@@ -60,13 +81,14 @@ const CheckoutModal: FC<Props> = ({ prices, product, store, hideTrigger = false 
     }));
 
     setTotal(Number(newTotal));
-    setSelectedPrice(price as AnyPrice);
+    setSelectedPrice(price as Price);
   }, [selectedPriceId, quantity, tip]);
 
   const redirectToPaymentLink = async (e: any) => {
     e.preventDefault();
     setSubmitting(true);
     setServerError(null);
+
     try {
       const link = await createPaymentLink(options);
       console.log("Payment link:", link);
@@ -173,16 +195,8 @@ const CheckoutModal: FC<Props> = ({ prices, product, store, hideTrigger = false 
                   onChange={(e) => setQuantity(Number(e.target.value))}
                   className="w-full rounded-md border border-gray-300  bg-white  px-3 py-2 text-base focus:ring-sky-500 focus:border-sky-500"
                 />
-              </div>
-              <div className="mb-4">
-                <label
-                  htmlFor="tip"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Tip / Custom Price
-                </label>
                 <input
-                  type="number"
+                  type="hidden"
                   id="tip"
                   value={tip}
                   onChange={(e) => setTip(Number(e.target.value))}

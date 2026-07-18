@@ -14,10 +14,13 @@ export function renderExcerpt(post: any): string {
 
 export function imgFor(post: any): string {
   const meta = post.data?.SEO || {};
+
   return (
     meta?.socialImage?.formats?.large?.url ||
     meta?.socialImage?.formats?.small?.url ||
     meta?.socialImage?.url ||
+    post?.data?.Thumbnail?.url ||
+    post?.data?.Slides?.[0]?.url ||
     post.data?.cover?.url ||
     ""
   );
