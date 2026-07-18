@@ -1,7 +1,7 @@
 {
   "name": "markket-sell",
   "type": "module",
-  "version": "0.5.2",
+  "version": "0.6.66",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
