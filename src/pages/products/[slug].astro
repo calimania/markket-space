@@ -2,10 +2,15 @@
 import { getCollection } from "astro:content";
 import PageLayout from "../../layouts/PageLayout.astro";
 import BlocksContent from "../../components/BlocksContent.astro";
-import CheckoutModal from "../../components/checkoutModal.tsx";
+import CheckoutModal, { type Price } from "../../components/checkoutModal.tsx";
 import { marked } from "marked";
 import { renderExcerpt, imgFor, pickRelated } from "../../lib/entry.utils";
-// ProductSlideshow will be initialized client-side below
+import {
+  IconCalendar,
+  IconArrowLeft,
+  IconMaximize,
+  IconX,
+} from "@tabler/icons-react";
 
 export async function getStaticPaths() {
   const products = await getCollection("products");
@@ -21,16 +26,28 @@ const { slug } = Astro.params;
 const product = products.find((p) => p.data?.slug === slug || p.id === slug);
 if (!product) throw new Error(`Product not found: ${slug}`);
 
-const seoTitle =
-  (product.data as any)?.SEO?.metaTitle || (product.data as any)?.Name || "";
+const productName = (product.data as any)?.Name || "Premium Asset";
+const seoTitle = (product.data as any)?.SEO?.metaTitle || productName;
 const seoDescription =
   (product.data as any)?.SEO?.metaDescription || renderExcerpt(product);
-const seoImage =
-  (product.data as any)?.SEO?.socialImage?.formats?.large?.url ||
-  (product.data as any)?.SEO?.socialImage?.url ||
-  (product.data as any)?.Thumbnail?.url ||
-  storeCover ||
-  "";
+
+// Image fallback parsing
+function imageOrFallback(
+  ...candidates: Array<string | undefined | null>
+): string {
+  return (
+    candidates.find(
+      (item): item is string => typeof item === "string" && item.length > 0,
+    ) || ""
+  );
+}
+
+const seoImage = imageOrFallback(
+  (product.data as any)?.SEO?.socialImage?.formats?.large?.url,
+  (product.data as any)?.SEO?.socialImage?.url,
+  (product.data as any)?.Thumbnail?.url,
+  storeCover?.url,
+);
 
 const heroLqip =
   (product.data as any)?.SEO?.socialImage?.formats?.small?.url ||
@@ -41,7 +58,7 @@ const heroVariant = (product.data as any)?.SEO?.meta?.heroVariant || "spacious";
 
 const related = pickRelated(products, product, 3);
 
-// pretty date
+// Date formatting
 const rawDate =
   (product.data as any)?.Date ||
   (product.data as any)?.publishedAt ||
@@ -59,45 +76,10 @@ const prettyDate = rawDate
 function productLinkFor(p: any) {
   const pd = p.data as any;
   if (pd?.ExternalUrl) return pd.ExternalUrl;
-  const s = pd?.slug || p.id;
-  return `/products/${s}`;
+  return `/products/${pd?.slug || p.id}`;
 }
 
-// safe product payload for client (serialize/deserialize to avoid circulars)
-const productForClient = JSON.parse(JSON.stringify(product));
-const productJson = encodeURIComponent(JSON.stringify(productForClient));
-const seoImageEncoded = encodeURIComponent(seoImage || "");
-
-// derive prices: support multiple CMS shapes
-const rawPrices =
-  (product.data as any)?.PRICES || (product.data as any)?.Prices || [];
-const prices: any[] = [];
-if (Array.isArray(rawPrices) && rawPrices.length > 0) {
-  rawPrices.forEach((p: any) => {
-    prices.push({
-      STRIPE_ID: p?.STRIPE_ID || p?.stripe_id || p?.id,
-      Price: p?.Price || p?.price || p?.unit_amount || p?.amount,
-      Name: p?.Name || p?.name || p?.label || "",
-      Currency: p?.Currency || p?.currency || "usd",
-    });
-  });
-} else if ((product.data as any)?.usd_price) {
-  prices.push({
-    STRIPE_ID: null,
-    Price: (product.data as any).usd_price,
-    Name: "Standard",
-    Currency: "usd",
-  });
-} else if ((product.data as any)?.Price) {
-  prices.push({
-    STRIPE_ID: null,
-    Price: (product.data as any).Price,
-    Name: "Standard",
-    Currency: "usd",
-  });
-}
-
-// gather slideshow images from common fields (Slides, Gallery, Thumbnail, SEO images)
+// Extract slideshow assets cleanly
 const rawSlides =
   (product.data as any)?.Slides ||
   (product.data as any)?.slides ||
@@ -109,25 +91,11 @@ if (Array.isArray(rawSlides) && rawSlides.length > 0) {
   rawSlides.forEach((s: any) => {
     const url = s?.url || s?.formats?.large?.url || s?.formats?.small?.url;
     if (url)
-      slides.push({
-        url,
-        alt: s?.alternativeText || s?.alt || (product.data as any)?.Name || "",
-      });
+      slides.push({ url, alt: s?.alternativeText || s?.alt || productName });
   });
 }
-// fallback to Thumbnail or SEO image
-if (slides.length === 0) {
-  const thumb =
-    (product.data as any)?.Thumbnail ||
-    (product.data as any)?.SEO?.socialImage ||
-    null;
-  const url =
-    thumb?.url ||
-    thumb?.formats?.large?.url ||
-    thumb?.formats?.small?.url ||
-    seoImage ||
-    null;
-  if (url) slides.push({ url, alt: (product.data as any)?.Name || "" });
+if (slides.length === 0 && seoImage) {
+  slides.push({ url: seoImage, alt: productName });
 }
 ---
 
@@ -135,121 +103,532 @@ if (slides.length === 0) {
   title={seoTitle}
   description={seoDescription}
   image={seoImage}
-  heroTitle={(product.data as any)?.Name || ""}
+  heroTitle={productName}
   heroSubtitle={product.data?.SEO?.metaDescription}
   heroImage={seoImage}
   heroLqip={heroLqip}
   heroAspect={heroAspect}
   heroVariant={heroVariant}
 >
-  <main class="container">
-    <article class="prose mx-auto my-12">
-      <h2>Product details</h2>
+  <main class="product-detail-layout">
+    <div class="container">
+      <!-- Back Navigation Bar -->
+      <nav class="breadcrumb-nav">
+        <a href="/products" class="back-link">
+          <IconArrowLeft size={16} /> Back to Catalog
+        </a>
+      </nav>
 
-      {
-        prettyDate && isoDate && (
-          <p class="text-sm text-muted">
-            <time datetime={isoDate}>{prettyDate}</time>
-          </p>
-        )
-      }
-      {
-        (product.data as any)?.Content ? (
-          <BlocksContent content={(product.data as any)?.Content} />
-        ) : (
+      <!-- Conversion Split Pane Matrix -->
+      <div class="product-core-grid">
+        <!-- Left Column: Interactive Interactive Gallery Structure -->
+        <div class="gallery-column">
           <div
-            class="prose"
-            set:html={marked((product.data as any)?.Description || "")}
-          />
+            class="primary-preview-frame"
+            id="lightbox-trigger"
+            title="Click to view full screen"
+          >
+            <img
+              src={slides[0]?.url || seoImage}
+              alt={slides[0]?.alt || productName}
+              id="main-gallery-view"
+              class="active-preview-img"
+            />
+            <div class="fullscreen-overlay-indicator">
+              <IconMaximize size={20} />
+            </div>
+          </div>
+
+          {
+            slides.length > 1 && (
+              <div class="thumbnail-strip-carousel">
+                {slides.map((s: any, i: number) => (
+                  <button
+                    data-target-url={s.url}
+                    data-target-alt={s.alt}
+                    class={`thumb-btn ${i === 0 ? "active" : ""}`}
+                    aria-label={`View slide gallery image ${i + 1}`}
+                  >
+                    <img src={s.url} alt="" loading="lazy" />
+                  </button>
+                ))}
+              </div>
+            )
+          }
+        </div>
+
+        <!-- Right Column: Context Information Block & Purchasing Pipeline -->
+        <div class="purchase-details-column">
+          <div class="sticky-meta-card">
+            <h1 class="product-main-title">{productName}</h1>
+
+            {
+              prettyDate && isoDate && (
+                <div class="product-release-date">
+                  <IconCalendar size={14} />
+                  <span>
+                    Published on <time datetime={isoDate}>{prettyDate}</time>
+                  </span>
+                </div>
+              )
+            }
+            <div class="cta-action-checkout-box">
+              <CheckoutModal
+                prices={product.data.PRICES as Price[]}
+                product={product}
+                store={store}
+                client:load
+              />
+            </div>
+            <div class="product-description-article format-prose">
+              {
+                (product.data as any)?.Content ? (
+                  <BlocksContent
+                    content={(product.data as any)?.Content}
+                    className="cms-blocks"
+                  />
+                ) : (
+                  <div
+                    class="raw-markdown-content"
+                    set:html={marked((product.data as any)?.Description || "")}
+                  />
+                )
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+      {
+        related && related.length > 0 && (
+          <section class="related-catalog-section">
+            <div class="related-section-header">
+              <h3>You Might Also Like</h3>
+            </div>
+            <div class="related-products-flex-grid">
+              {related.map((r: any) => (
+                <a
+                  href={productLinkFor(r)}
+                  class="mini-product-card"
+                  aria-label={`View product ${(r.data as any)?.Name || r.id}`}
+                >
+                  <div class="mini-thumb-pane">
+                    <img src={imgFor(r)} alt="" loading="lazy" />
+                  </div>
+                  <div class="mini-content-pane">
+                    <h4>{(r.data as any)?.Name || "Premium Asset"}</h4>
+                    <p>{(renderExcerpt(r) || "").slice(0, 90)}…</p>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </section>
         )
       }
-    </article>
-
-    <section>
-      <div class="mt-4 flex items-center gap-3">
-        <CheckoutModal
-          prices={product.data.PRICES}
-          product={product}
-          store={store}
-          client:idle
-        />
-      </div>
-    </section>
-
-    <section class="mt-8">
-      <div class="grid md:grid-cols-4 gap-6 items-start">
-        <div class="md:col-span-3">
-          <div class="rounded-lg overflow-hidden">
-            <img
-              src={slides[0]?.url || "" || seoImage}
-              alt={slides[0]?.alt || ""}
-              class="w-full h-96 object-cover hero-image"
-            />
-          </div>
-        </div>
-        <div class="col-span-1 hidden md:block">
-          <div class="flex flex-col gap-3">
-            {
-              slides.map((s: any, i: number) => (
-                <button
-                  data-astro-image-url={s.url}
-                  data-astro-image-alt={s.alt}
-                  class="w-full h-20 overflow-hidden rounded"
-                  aria-pressed="false"
-                  tabindex="0"
-                >
-                  <img
-                    src={s.url}
-                    alt={s.alt}
-                    class="w-full h-full object-cover"
-                  />
-                </button>
-              ))
-            }
-          </div>
-        </div>
-      </div>
-    </section>
-
-    {
-      related && related.length > 0 && (
-        <section class="related container mt-12">
-          <h3 class="text-xl font-semibold mb-4" style="color: var(--text);">
-            Related products
-          </h3>
-          <div class="grid md:grid-cols-2 gap-6">
-            {related.map((r: any) => (
-              <a
-                href={productLinkFor(r)}
-                class="rounded-lg shadow-sm p-3 flex gap-3 items-start hover:shadow-md transition bg-surface"
-                aria-label={`View product ${(r.data as any)?.Name || r.id}`}
-              >
-                <div class="w-28 h-20 overflow-hidden rounded flex-shrink-0">
-                  <img
-                    src={imgFor(r)}
-                    alt={
-                      (r.data as any)?.SEO?.altText ||
-                      (r.data as any)?.Name ||
-                      `Product: ${r.data?.slug || r.id}`
-                    }
-                    class="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
-                <div class="flex-1">
-                  <h4 class="font-semibold text-lg" style="color: var(--text);">
-                    {(r.data as any)?.Name}
-                  </h4>
-                  <p class="text-sm mt-1" style="color: var(--text-muted)">
-                    {(renderExcerpt(r) || "").slice(0, 120)}
-                    {(renderExcerpt(r) || "").length > 120 ? "\u2026" : ""}
-                  </p>
-                </div>
-              </a>
-            ))}
-          </div>
-        </section>
-      )
-    }
+    </div>
   </main>
+  <div
+    id="global-lightbox-modal"
+    class="lightbox-portal"
+    aria-hidden="true"
+    role="dialog"
+  >
+    <button
+      id="lightbox-close-btn"
+      class="lightbox-close"
+      aria-label="Close full view"
+    >
+      <IconX size={28} />
+    </button>
+    <div class="lightbox-stage">
+      <img id="lightbox-display-img" src="" alt="" />
+    </div>
+  </div>
 </PageLayout>
+<script>
+  function initializeStorefrontEngine() {
+    const mainView = document.getElementById(
+      "main-gallery-view",
+    ) as HTMLImageElement;
+    const thumbButtons = document.querySelectorAll(".thumb-btn");
+    const trigger = document.getElementById("lightbox-trigger");
+    const portal = document.getElementById("global-lightbox-modal");
+    const portalImg = document.getElementById(
+      "lightbox-display-img",
+    ) as HTMLImageElement;
+    const closePortal = document.getElementById("lightbox-close-btn");
+
+    if (!mainView) return;
+
+    // Gallery Selector Logic
+    thumbButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        thumbButtons.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        const targetUrl = btn.getAttribute("data-target-url");
+        const targetAlt = btn.getAttribute("data-target-alt");
+
+        if (targetUrl && mainView) {
+          mainView.src = targetUrl;
+          if (targetAlt) mainView.alt = targetAlt;
+        }
+      });
+    });
+
+    // Lightbox Modal Logic
+    if (trigger && portal && portalImg) {
+      trigger.addEventListener("click", () => {
+        portalImg.src = mainView.src;
+        portalImg.alt = mainView.alt;
+        portal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden"; // Prevent background scroll
+      });
+
+      const closeAction = () => {
+        portal.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+      };
+
+      if (closePortal) closePortal.addEventListener("click", closeAction);
+      portal.addEventListener("click", (e) => {
+        if (e.target === portal) closeAction();
+      });
+
+      // Escape key support
+      document.addEventListener("keydown", (e) => {
+        if (
+          e.key === "Escape" &&
+          portal.getAttribute("aria-hidden") === "false"
+        ) {
+          closeAction();
+        }
+      });
+    }
+  }
+
+  // Support Standard Astro lifecycle events and ViewTransitions setup runs
+  initializeStorefrontEngine();
+  document.addEventListener("astro:page-load", initializeStorefrontEngine);
+</script>
+
+<style>
+  /* Layout Architecture Setup */
+  .product-detail-layout {
+    padding: 2rem 0 6rem;
+    background: var(--bg);
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .breadcrumb-nav {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .back-link:hover {
+    color: var(--primary);
+  }
+
+  /* Dual Column Presentation Blueprint */
+  .product-core-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 3.5rem;
+    align-items: start;
+  }
+
+  /* Interactive Presentation Gallery Panels */
+  .gallery-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .primary-preview-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: var(--bg-alt);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg, 16px);
+    overflow: hidden;
+    cursor: zoom-in;
+    box-shadow: var(--shadow, 0 4px 12px rgba(0, 0, 0, 0.02));
+  }
+
+  .active-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .primary-preview-frame:hover .active-preview-img {
+    transform: scale(1.02);
+  }
+
+  .fullscreen-overlay-indicator {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    color: white;
+    padding: 0.5rem;
+    border-radius: 50%;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: all 0.2s ease;
+    pointer-events: none;
+  }
+
+  .primary-preview-frame:hover .fullscreen-overlay-indicator {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Thumbnails Layout Controls */
+  .thumbnail-strip-carousel {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+
+  .thumb-btn {
+    width: 84px;
+    height: 64px;
+    border-radius: var(--radius-sm, 6px);
+    overflow: hidden;
+    border: 2px solid transparent;
+    background: var(--bg-alt);
+    padding: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+  }
+
+  .thumb-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .thumb-btn:hover {
+    opacity: 0.8;
+  }
+
+  .thumb-btn.active {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+
+  /* Strategic Sticky Purchasing Panel */
+  .purchase-details-column {
+    position: sticky;
+    top: 2rem;
+  }
+
+  .sticky-meta-card {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .product-main-title {
+    font-size: 2.25rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    margin: 0 0 0.5rem 0;
+    line-height: 1.2;
+  }
+
+  .product-release-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-bottom: 2rem;
+  }
+
+  .cta-action-checkout-box {
+    background: var(--bg-alt);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius, 12px);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  /* Content Rendering Rules overrides */
+  .product-description-article {
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 1rem;
+  }
+
+  .product-description-article :global(p) {
+    margin-bottom: 1.25rem;
+    color: var(--text-muted);
+  }
+
+  /* Related Products Module Layout Styles */
+  .related-catalog-section {
+    margin-top: 6rem;
+    padding-top: 3rem;
+    border-top: 1px solid var(--border-light);
+  }
+
+  .related-section-header h3 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 1.5rem 0;
+  }
+
+  .related-products-flex-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .mini-product-card {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-alt);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius, 10px);
+    text-decoration: none;
+    transition: all 0.25s ease;
+  }
+
+  .mini-product-card:hover {
+    background: var(--bg);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+
+  .mini-thumb-pane {
+    width: 90px;
+    height: 70px;
+    border-radius: var(--radius-sm, 6px);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .mini-thumb-pane img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .mini-content-pane h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 0.25rem 0;
+  }
+
+  .mini-content-pane p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  /* Native Lightbox Modal Architecture styles */
+  .lightbox-portal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 10, 12, 0.95);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .lightbox-portal[aria-hidden="false"] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .lightbox-close {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    opacity: 0.7;
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease;
+    padding: 0.5rem;
+  }
+
+  .lightbox-close:hover {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+
+  .lightbox-stage {
+    max-width: 90%;
+    max-height: 85%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lightbox-stage img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: var(--radius-sm, 4px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    transform: scale(0.95);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .lightbox-portal[aria-hidden="false"] .lightbox-stage img {
+    transform: scale(1);
+  }
+
+  /* Fluid Responsive Adjustments */
+  @media (max-width: 960px) {
+    .product-core-grid {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    .purchase-details-column {
+      position: relative;
+      top: 0;
+    }
+    .product-main-title {
+      font-size: 1.75rem;
+    }
+  }
+</style>

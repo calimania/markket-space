@@ -3,12 +3,15 @@ import { getCollection } from "astro:content";
 import PageLayout from "../../layouts/PageLayout.astro";
 import BlocksContent from "../../components/BlocksContent.astro";
 import { renderExcerpt, imgFor } from "../../lib/entry.utils";
+import { IconArrowRight, IconBook } from "@tabler/icons-react";
 
+// Safe collection loading
 const pages = await getCollection("pages");
-const page = pages.find((p) => p.data.slug == "blog")?.data;
+const page = pages.find((p) => p.data.slug === "blog")?.data;
 
 const articles = await getCollection("posts");
 
+// Segment post layouts logically
 const featured = articles?.[0] ?? null;
 const secondary = articles?.[1] ?? null;
 const rest = articles?.slice(2) ?? [];
@@ -16,156 +19,161 @@ const rest = articles?.slice(2) ?? [];
 const storeData = await getCollection("store");
 const store = storeData[0]?.data || {};
 const storeCover = store.Cover;
+
+// Consistent image fallback processing matching our layout engine rules
+function imageOrFallback(
+  ...candidates: Array<string | undefined | null>
+): string | undefined {
+  return candidates.find(
+    (item): item is string => typeof item === "string" && item.length > 0,
+  );
+}
+
+const seoImage = imageOrFallback(
+  page?.SEO?.socialImage?.formats?.large?.url,
+  page?.SEO?.socialImage?.url,
+  storeCover?.formats?.large?.url,
+  storeCover?.url,
+);
 ---
 
 <PageLayout
-  title={page?.SEO?.metaTitle || store.SEO?.metaTitle}
+  title={page?.SEO?.metaTitle || store.SEO?.metaTitle || "Blog"}
   description={page?.SEO?.metaDescription || store.SEO?.metaDescription}
-  image={page?.SEO?.socialImage?.formats?.large?.url ||
-    page?.SEO?.socialImage?.url ||
-    storeCover?.url}
-  heroTitle={page?.Title || "Markkët Space Blog"}
+  image={seoImage}
+  heroTitle={page?.Title || `${store.title || "Markkët Space"} Blog`}
   heroSubtitle={page?.SEO?.metaDescription ||
-    "Articles and updates for the seller community."}
+    "Articles, guides, and updates from the creator commerce universe."}
   heroImage={page?.SEO?.socialImage?.url || storeCover?.url}
   heroLqip={page?.SEO?.socialImage?.formats?.small?.url}
   heroAspect={page?.SEO?.meta?.heroAspect || "4/5"}
   heroVariant={page?.SEO?.meta?.heroVariant || "spacious"}
 >
-  <section class="posts-list-section">
+  <section class="blog-section">
     <div class="container">
-      <h2 class="text-2xl font-bold mt-8 mb-6" style="color: var(--text);">
-        Latest articles
-      </h2>
+      <div class="blog-section-header">
+        <IconBook className="section-icon" size={22} />
+        <h2>Latest Articles</h2>
+      </div>
 
       {
         articles && articles.length > 0 ? (
-          <>
+          <div class="editorial-flow">
+            {/* 1. HERO FEATURED POST ROW */}
             {featured && (
               <a
                 href={`/blog/${featured.data?.slug || featured.id}`}
-                class="block mb-6 rounded-2xl overflow-hidden shadow-xl"
+                class="featured-card"
                 title={featured.data?.Title || featured.data?.slug}
               >
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-                  {imgFor(featured) ? (
-                    <div class="md:col-span-1 h-72 md:h-auto overflow-hidden rounded-l-2xl">
+                <div class="featured-grid">
+                  <div class="featured-image-pane">
+                    {imgFor(featured) ? (
                       <img
                         src={imgFor(featured)}
                         alt={featured.data?.Title || ""}
-                        class="w-full h-full object-cover"
-                        loading="lazy"
+                        class="object-cover-img"
+                        loading="eager"
                       />
-                    </div>
-                  ) : (
-                    <div class="md:col-span-1 h-72 md:h-auto bg-gradient-to-tr from-pink-50 to-indigo-50 flex items-center justify-center text-gray-400">
-                      No image
-                    </div>
-                  )}
+                    ) : (
+                      <div class="placeholder-gradient">No Image Available</div>
+                    )}
+                  </div>
 
-                  <div class="p-6 md:p-10 bg-white md:bg-transparent md:col-span-1 flex flex-col justify-center">
-                    <h3
-                      class="text-3xl font-extrabold mb-3"
-                      style="color: var(--text);"
-                    >
-                      {featured.data?.Title || featured.data?.slug}
-                    </h3>
-                    <p class="max-w-2xl" style="color: var(--text-muted)">
-                      {(renderExcerpt(featured) || "").slice(0, 300)}
-                      {(renderExcerpt(featured) || "").length > 300 ? "…" : ""}
+                  <div class="featured-content-pane">
+                    <span class="badge">Featured Post</span>
+                    <h3>{featured.data?.Title || featured.data?.slug}</h3>
+                    <p class="excerpt-text">
+                      {(renderExcerpt(featured) || "").slice(0, 240)}
+                      {(renderExcerpt(featured) || "").length > 240 ? "…" : ""}
                     </p>
+                    <span class="read-more-link">
+                      Read Article <IconArrowRight size={16} />
+                    </span>
                   </div>
                 </div>
               </a>
             )}
 
-            <div class="grid md:grid-cols-3 gap-6">
+            {/* 2. SECONDARY SPLIT GRID WORKSPACE */}
+            <div class="secondary-split-grid">
+              {/* Secondary Spotlight Card */}
               {secondary && (
                 <a
                   href={`/blog/${secondary.data?.slug || secondary.id}`}
-                  class="post-card col-span-2 bg-white rounded-xl shadow-md hover:shadow-lg transition p-4"
+                  class="spotlight-card"
                   title={secondary.data?.Title}
                 >
-                  {imgFor(secondary) ? (
-                    <div class="h-44 w-full overflow-hidden rounded-lg mb-4">
+                  <div class="spotlight-image-wrapper">
+                    {imgFor(secondary) ? (
                       <img
                         src={imgFor(secondary)}
                         alt={secondary.data?.Title || ""}
-                        class="w-full h-full object-cover"
+                        class="object-cover-img"
                         loading="lazy"
                       />
-                    </div>
-                  ) : (
-                    <div class="h-44 w-full rounded-lg mb-4 bg-gradient-to-tr from-pink-50 to-indigo-50 flex items-center justify-center text-gray-400">
-                      No image
-                    </div>
-                  )}
-                  <h3 class="text-xl font-semibold" style="color: var(--text);">
-                    {secondary.data?.Title}
-                  </h3>
-                  <p class="mt-2 text-sm" style="color: var(--text-muted)">
-                    {(renderExcerpt(secondary) || "").slice(0, 160)}
-                    {(renderExcerpt(secondary) || "").length > 160 ? "…" : ""}
-                  </p>
+                    ) : (
+                      <div class="placeholder-gradient">No Image Available</div>
+                    )}
+                  </div>
+                  <div class="spotlight-body">
+                    <h3>{secondary.data?.Title}</h3>
+                    <p>
+                      {(renderExcerpt(secondary) || "").slice(0, 140)}
+                      {(renderExcerpt(secondary) || "").length > 140 ? "…" : ""}
+                    </p>
+                  </div>
                 </a>
               )}
 
-              <div class="col-span-1 space-y-4">
+              {/* Feed List of Remaining Posts */}
+              <div class="feed-column">
                 {rest && rest.length > 0 ? (
                   rest.map((a: any) => (
                     <a
                       href={`/blog/${a.data?.slug || a.id}`}
-                      class="p-4 rounded-lg shadow-sm hover:shadow-md transition flex gap-4 items-start compact-item"
+                      class="feed-item"
                       title={a.data?.Title}
                     >
-                      {imgFor(a) ? (
-                        <div class="w-28 h-20 rounded overflow-hidden flex-shrink-0">
+                      <div class="feed-thumb-wrapper">
+                        {imgFor(a) ? (
                           <img
                             src={imgFor(a)}
                             alt={a.data?.Title || ""}
-                            class="w-full h-full object-cover"
+                            class="object-cover-img"
                             loading="lazy"
                           />
-                        </div>
-                      ) : (
-                        <div class="w-28 h-20 rounded bg-gradient-to-tr from-pink-50 to-indigo-50 flex items-center justify-center text-gray-400 flex-shrink-0">
-                          No image
-                        </div>
-                      )}
-                      <div class="flex-1">
-                        <h4
-                          class="font-semibold text-lg"
-                          style="color: var(--text);"
-                        >
-                          {a.data?.Title}
-                        </h4>
-                        <p
-                          class="text-sm mt-1"
-                          style="color: var(--text-muted)"
-                        >
-                          {(renderExcerpt(a) || "").slice(0, 140)}
-                          {(renderExcerpt(a) || "").length > 140 ? "…" : ""}
+                        ) : (
+                          <div class="placeholder-gradient tiny">Empty</div>
+                        )}
+                      </div>
+                      <div class="feed-info">
+                        <h4>{a.data?.Title}</h4>
+                        <p>
+                          {(renderExcerpt(a) || "").slice(0, 100)}
+                          {(renderExcerpt(a) || "").length > 100 ? "…" : ""}
                         </p>
                       </div>
                     </a>
                   ))
                 ) : (
-                  <p class="text-sm" style="color: var(--text-muted)">
-                    No more articles
-                  </p>
+                  <div class="empty-feed-state">
+                    <p>No further articles published.</p>
+                  </div>
                 )}
               </div>
             </div>
-          </>
+          </div>
         ) : (
-          <p class="text-sm" style="color: var(--text-muted)">
-            No articles yet — check back soon.
-          </p>
+          <div class="no-posts-wrapper">
+            <p>Our writers are working on fresh insights. Check back soon!</p>
+          </div>
         )
       }
     </div>
   </section>
 
+  {/* Supplemental Content Blocks from Content API */}
   {
     page?.Content && page.Content.length > 0 && (
       <section class="page-content-section">
@@ -176,3 +184,330 @@ const storeCover = store.Cover;
     )
   }
 </PageLayout>
+
+<style>
+  /* Baseline Configuration Layout */
+  .blog-section {
+    padding: 4rem 0 6rem;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .blog-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 1rem;
+  }
+
+  .section-icon {
+    color: var(--primary);
+  }
+
+  .blog-section-header h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin: 0;
+  }
+
+  /* Global Universal Imagery Components */
+  .object-cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .placeholder-gradient {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(
+      135deg,
+      var(--bg-alt) 0%,
+      var(--border-light) 100%
+    );
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .placeholder-gradient.tiny {
+    font-size: 0.75rem;
+  }
+
+  /* Editorial Layout Rulesets */
+  .editorial-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+
+  /* 1. Premium Hero Card Component */
+  .featured-card {
+    display: block;
+    background: var(--bg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg, 16px);
+    overflow: hidden;
+    text-decoration: none;
+    box-shadow: var(--shadow, 0 4px 20px rgba(0, 0, 0, 0.03));
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease,
+      border-color 0.3s ease;
+  }
+
+  .featured-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary);
+    box-shadow: var(--shadow-lg, 0 12px 30px rgba(0, 0, 0, 0.08));
+  }
+
+  .featured-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+  }
+
+  .featured-image-pane {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: var(--bg-alt);
+  }
+
+  .featured-card:hover .object-cover-img {
+    transform: scale(1.02);
+  }
+
+  .featured-content-pane {
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .badge {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.75rem;
+    border-radius: 99px;
+    margin-bottom: 1.25rem;
+  }
+
+  .featured-content-pane h3 {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.25;
+    color: var(--text);
+    margin: 0 0 1rem 0;
+  }
+
+  .excerpt-text {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    margin: 0 0 1.5rem 0;
+  }
+
+  .read-more-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--primary);
+    transition: gap 0.2s ease;
+  }
+
+  .featured-card:hover .read-more-link {
+    gap: 0.6rem;
+  }
+
+  /* 2. Secondary Split Layout Row Grid */
+  .secondary-split-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1.4fr;
+    gap: 2.5rem;
+    align-items: start;
+  }
+
+  /* Spotlight Feature Card Block */
+  .spotlight-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg, 16px);
+    overflow: hidden;
+    text-decoration: none;
+    box-shadow: var(--shadow, 0 2px 10px rgba(0, 0, 0, 0.02));
+    transition:
+      transform 0.3s ease,
+      border-color 0.3s ease,
+      box-shadow 0.3s ease;
+  }
+
+  .spotlight-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary);
+    box-shadow: var(--shadow-lg, 0 10px 25px rgba(0, 0, 0, 0.06));
+  }
+
+  .spotlight-image-wrapper {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--bg-alt);
+  }
+
+  .spotlight-card:hover .object-cover-img {
+    transform: scale(1.02);
+  }
+
+  .spotlight-body {
+    padding: 2rem;
+  }
+
+  .spotlight-body h3 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--text);
+    margin: 0 0 0.75rem 0;
+  }
+
+  .spotlight-body p {
+    font-size: 0.95rem;
+    line-height: 1.55;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  /* Feed Column Integration Block */
+  .feed-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .feed-item {
+    display: flex;
+    gap: 1.25rem;
+    align-items: center;
+    padding: 1rem;
+    background: var(--bg);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius, 12px);
+    text-decoration: none;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+  }
+
+  .feed-item:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow, 0 4px 12px rgba(0, 0, 0, 0.04));
+    transform: translateX(3px);
+  }
+
+  .feed-thumb-wrapper {
+    width: 110px;
+    height: 80px;
+    border-radius: var(--radius-sm, 6px);
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--bg-alt);
+  }
+
+  .feed-info {
+    flex-grow: 1;
+    min-width: 0;
+  }
+
+  .feed-info h4 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--text);
+    margin: 0 0 0.25rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .feed-info p {
+    font-size: 0.875rem;
+    line-height: 1.45;
+    color: var(--text-muted);
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Supplemental Structural Blocks Context */
+  .page-content-section {
+    padding: 2rem 0 6rem;
+  }
+
+  .no-posts-wrapper,
+  .empty-feed-state {
+    padding: 3rem;
+    text-align: center;
+    background: var(--bg-alt);
+    border-radius: var(--radius, 12px);
+    border: 1px dashed var(--border-light);
+    color: var(--text-muted);
+  }
+
+  /* Responsive Design Rules */
+  @media (max-width: 1024px) {
+    .featured-grid {
+      grid-template-columns: 1fr;
+    }
+    .featured-content-pane {
+      padding: 2rem;
+    }
+    .secondary-split-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .blog-section {
+      padding: 2.5rem 0 4rem;
+    }
+    .featured-content-pane h3 {
+      font-size: 1.5rem;
+    }
+    .feed-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    .feed-thumb-wrapper {
+      width: 100%;
+      height: 140px;
+    }
+  }
+</style>
